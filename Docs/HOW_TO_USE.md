@@ -1,6 +1,6 @@
-# Daykeeper quick guide
+# Home Manager quick guide
 
-This guide covers the everyday actions in Daykeeper. Screenshots show the iPhone simulator with sample data.
+This guide covers the everyday actions in Home Manager. Screenshots show the iPhone simulator with sample data.
 
 ## Find your way around
 
@@ -29,11 +29,12 @@ The **Master catalog** is reusable. Starter staples such as milk, eggs, rice, br
 
 1. In **Groceries**, tap **Add** next to an item to put it on **Today's Shopping**. Tap the item row to stage it as well.
 2. To add a new staple, tap the **+** at the right of the Master catalog heading. The Grocery item form is selected automatically. Enter its name and category; **Add to today's shopping** is on by default.
-3. Tap the sliders icon beside the Master catalog heading for all category actions in one place: create a category, reorder rows, rename with the pencil (existing items update too), or delete with the trash button and confirmation (items move to **Other**). **Other** is protected and always stays last. The filter chips, grocery category picker, and items shown under **All** follow the saved order.
+3. Long-press a Master catalog item and choose **Edit item** to change its name or category. The updated category also appears in filters and Today's Shopping. Choose **Delete from catalog** in the same menu to remove the item.
+4. Tap the sliders icon beside the Master catalog heading for all category actions in one place: create a category, reorder rows, rename with the pencil (existing items update too), or delete with the trash button and confirmation (items move to **Other**). **Other** is protected and always stays last. The filter chips, grocery category picker, and items shown under **All** follow the saved order.
 5. In **Today's Shopping**, use the filter and sort icons at the right of the heading to filter staged items or show them by name/category order.
 6. Use **−** and **+** beside a staged item to change its quantity. Pressing **−** at quantity 1 asks for confirmation before removing it from today's shopping; it stays in the catalog.
 7. Tap the check circle or the item name to mark it purchased. It stays on the list with a strikethrough. Tap either again to undo an accidental mark.
-8. When you're finished, tap **Done Shopping**. Every item must be checked first; any unchecked items are outlined in red. Once all are checked, the list clears and a short confetti celebration appears.
+8. When you're finished, tap **Done Shopping**. Every item must be checked first; unchecked item labels turn red. Once all are checked, the list clears for your next trip.
 
 ![Groceries tab with an item staged from the master catalog](screenshots/groceries.png)
 
@@ -54,10 +55,10 @@ The **Master catalog** is reusable. Starter staples such as milk, eggs, rice, br
 2. To add a bill, open Quick Add's type picker and choose **Bill**. Add its amount and due date; turn on **Remind me** if you want a local alert.
 3. The Money screen shows upcoming bills, renewal dates, monthly and annual subscription totals, and a category chart.
 
-## Personalize Daykeeper
+## Personalize Home Manager
 
-Open **… → Settings** from Today to set your preferred name, appearance, app accent color, text size, default task priority, and notification permission. Your name appears in the time-of-day greeting and in newly scheduled reminders. Calendar dates with scheduled items show a dot beneath the date.
+Open **… → Settings** from Today to set your preferred name, appearance, app accent color, text size, default task priority, and notification permission. The Home Screen icon follows your selected accent color; iOS may show a confirmation when the icon changes. Your name appears in the time-of-day greeting and in newly scheduled reminders. Calendar dates with scheduled items show a dot beneath the date.
 
 ## Your data
 
-Daykeeper saves items on this iPhone with SwiftData. It does not require an account or send your personal information to a server. Use a device backup to protect data; in-app export and restore are not available in this release.
+Home Manager saves items on this iPhone with SwiftData. It does not require an account or send your personal information to a server. Use a device backup to protect data; in-app export and restore are not available in this release.

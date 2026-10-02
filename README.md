@@ -1,6 +1,6 @@
-# Daykeeper
+# Home Manager
 
-Daykeeper is an offline-first personal life-management app for iPhone. It brings everyday tasks, grocery trips, home maintenance and projects, bills, and subscriptions together in one local app.
+Home Manager is an offline-first personal life-management app for iPhone. It brings everyday tasks, grocery trips, home maintenance and projects, bills, and subscriptions together in one local app.
 
 ## Product overview
 
@@ -32,12 +32,12 @@ The grocery Master catalog has one category manager for creating, editing, reord
 3. Choose an iPhone simulator or connected iPhone as the run destination.
 4. For a simulator, press **⌘R**. For an iPhone, set the signing team and a unique bundle identifier under **Signing & Capabilities**, then press **⌘R**.
 
-The app is named **Daykeeper** on the Home Screen. On a new install, it adds example tasks, home data, bills, and subscriptions. The starter grocery catalog is seeded once, including for an existing install that upgrades to the grocery feature. User content is stored on the device.
+The app is named **Home Manager** on the Home Screen. On a new install, it adds example tasks, home data, bills, and subscriptions. The starter grocery catalog is seeded once, including for an existing install that upgrades to the grocery feature. User content is stored on the device.
 
 ## Architecture
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the component diagram, model relationships, and data flow.
-For everyday workflows with screenshots, see the [Daykeeper quick guide](Docs/HOW_TO_USE.md).
+For everyday workflows with screenshots, see the [Home Manager quick guide](Docs/HOW_TO_USE.md).
 
 At a glance, `LifeCommandCenterApp.swift` defines the SwiftData schema, local models, app entry point, and notification service. `Views.swift` contains the tab screens, reusable components, and forms. Screens observe data with `@Query` and edit it through the shared SwiftData `ModelContext`.
 
@@ -70,7 +70,7 @@ Subscription renewal lead-time options (such as 7 days, 1 day, and renewal day),
 The repository is a development MVP. Before distributing through TestFlight or the App Store:
 
 1. **Set app identity:** In the `LifeCommandCenter` target's Signing & Capabilities, replace the current placeholder bundle identifier `com.example.LifeCommandCenter` with a unique reverse-DNS identifier you control. Set the Apple Developer team and enable automatic signing.
-2. **Set release metadata:** Confirm the display name is Daykeeper, set a deliberate marketing version and build number, and review supported devices and orientation.
+2. **Set release metadata:** Confirm the display name is Home Manager, set a deliberate marketing version and build number, and review supported devices and orientation.
 3. **Review the icon:** Check the 1024×1024 `AppIcon` asset on the Home Screen and in App Store Connect.
 4. **Review privacy and permissions:** Confirm the notification permission prompt and user-facing copy. Complete App Store privacy disclosures accurately; this app has no backend or tracking, but only the publisher can make the final privacy declarations.
 5. **Validate existing data:** Test an upgrade from the previously installed build with real SwiftData content. Verify data remains after migration and app relaunch. Keep a device backup before testing upgrades.

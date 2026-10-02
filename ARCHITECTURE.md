@@ -1,4 +1,4 @@
-# Daykeeper architecture
+# Home Manager architecture
 
 ## Component diagram
 
@@ -130,7 +130,7 @@ Sample household data is inserted once using `@AppStorage` flags. The grocery ca
 
 - `LifeCommandCenter/LifeCommandCenterApp.swift`: app entry, SwiftData models and schema, root navigation, sample seeding, recurrence helper, local notification service.
 - `LifeCommandCenter/Views.swift`: tabs, dashboard, task and grocery workflows, home/money screens, calendar/search/statistics/settings, Quick Add, and editors.
-- `LifeCommandCenter/Assets.xcassets/AppIcon.appiconset/`: Daykeeper app icon.
+- `LifeCommandCenter/Assets.xcassets/AppIcon.appiconset/`: Home Manager app icon.
 - `LifeCommandCenter/render_app_icon.swift`: deterministic AppKit script used to render the source app icon PNG.
 - `LifeCommandCenter.xcodeproj/`: Xcode application target and build settings.
 - `Docs/HOW_TO_USE.md` and `Docs/screenshots/`: end-user quick guide and simulator captures.

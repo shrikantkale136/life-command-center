@@ -50,16 +50,28 @@ struct TodayView: View {
                         .accessibilityLabel("More tools")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: add) {
-                        Image(systemName: "plus").font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
-                            .frame(width: 38, height: 38)
-                            .background { Circle().fill(forest) }
-                            .overlay { Circle().strokeBorder(Color.white.opacity(0.18), lineWidth: 1) }
-                            .contentShape(Circle())
+                    HStack(spacing: 8) {
+                        NavigationLink { CalendarView() } label: {
+                            Image(systemName: "calendar")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundStyle(forest)
+                                .frame(width: 40, height: 40)
+                                .background(forest.opacity(0.08), in: Circle())
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Calendar")
+
+                        Button(action: add) {
+                            Image(systemName: "plus").font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
+                                .frame(width: 38, height: 38)
+                                .background { Circle().fill(forest) }
+                                .overlay { Circle().strokeBorder(Color.white.opacity(0.18), lineWidth: 1) }
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Quick add")
                     }
-                    .buttonStyle(.plain)
-                    .frame(width: 44, height: 44)
-                    .accessibilityLabel("Quick add")
                 }
             }
         }
@@ -131,6 +143,7 @@ struct GroceriesView: View {
     @State private var itemToRemove: GroceryItem?
     @State private var showingRemoveConfirmation = false
     @State private var showShoppingCelebration = false
+    @State private var itemBeingEdited: GroceryItem?
 
     private var availableCategories: [String] {
         let hidden = Set(GroceryCategoryCatalog.decoded(hiddenBuiltInCategoriesJSON))
@@ -313,6 +326,7 @@ struct GroceriesView: View {
                                     }.padding(13).contentShape(Rectangle())
                                         .onTapGesture { if !item.isStaged { stage(item) } }
                                         .contextMenu {
+                                            Button("Edit item", systemImage: "pencil") { itemBeingEdited = item }
                                             if !item.isStaged { Button("Add to today's shopping", systemImage: "plus") { stage(item) } }
                                             Button("Delete from catalog", systemImage: "trash", role: .destructive) { context.delete(item) }
                                         }
@@ -336,6 +350,9 @@ struct GroceriesView: View {
                         deleteCategory: deleteCategory,
                         editCategory: renameCategory
                     )
+                }
+                .sheet(item: $itemBeingEdited) { item in
+                    GroceryCatalogItemEditor(item: item, categories: orderedCategories)
                 }
                 .alert("Remove grocery?", isPresented: $showingRemoveConfirmation) {
                     Button("Remove", role: .destructive) {
@@ -591,6 +608,65 @@ struct GroceryCreateFields: View {
             }
             done()
         }.disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+    }
+}
+
+private struct GroceryCatalogItemEditor: View {
+    @Environment(\.dismiss) private var dismiss
+    @Query private var existingItems: [GroceryItem]
+    @State private var name: String
+    @State private var category: String
+
+    let item: GroceryItem
+    let categories: [String]
+
+    init(item: GroceryItem, categories: [String]) {
+        self.item = item
+        self.categories = categories
+        self._name = State(initialValue: item.name)
+        self._category = State(initialValue: item.category)
+    }
+
+    private var cleanedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var duplicateName: Bool {
+        existingItems.contains {
+            $0.persistentModelID != item.persistentModelID &&
+            $0.name.localizedCaseInsensitiveCompare(cleanedName) == .orderedSame
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Grocery item") {
+                    TextField("Item name", text: $name)
+                    Picker("Category", selection: $category) {
+                        ForEach(categories, id: \.self) { Text($0) }
+                    }
+                    if duplicateName {
+                        Text("An item with this name is already in your catalog.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .navigationTitle("Edit item")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        item.name = cleanedName
+                        item.category = category
+                        dismiss()
+                    }
+                    .disabled(cleanedName.isEmpty || duplicateName)
+                }
+            }
+        }
+        .presentationDetents([.medium])
     }
 }
 
@@ -922,7 +998,7 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("Your profile") {
-                TextField("What should Daykeeper call you?", text: $preferredName)
+                TextField("What should Home Manager call you?", text: $preferredName)
                     .textContentType(.givenName).autocorrectionDisabled()
             }
             Section("Appearance") {
@@ -950,6 +1026,9 @@ struct SettingsView: View {
                         }
                     }
                     .frame(maxWidth: .infinity)
+                    Text("The Home Screen icon follows your selected color.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 4)
                 Picker("Text size", selection: $fontSize) {
@@ -971,8 +1050,23 @@ struct SettingsView: View {
                 }
             }
             Section("Data") { Text("Your information is stored locally. Cloud sync can be added later.").font(.footnote).foregroundStyle(.secondary) }
-            Section("About") { LabeledContent("Daykeeper", value: "Version 1.0") }
+            Section("About") { LabeledContent("Home Manager", value: "Version 1.0") }
         }
         .navigationTitle("Settings")
+        .onAppear { updateHomeScreenIcon(for: accentColor) }
+        .onChange(of: accentColor) { oldValue, newValue in
+            updateHomeScreenIcon(for: newValue, revertingTo: oldValue)
+        }
+    }
+
+    private func updateHomeScreenIcon(for color: String, revertingTo previousColor: String? = nil) {
+        let iconName = color == "Forest" ? nil : "AppIcon\(color)"
+        guard UIApplication.shared.supportsAlternateIcons,
+              UIApplication.shared.alternateIconName != iconName else { return }
+
+        UIApplication.shared.setAlternateIconName(iconName) { error in
+            guard error != nil, let previousColor else { return }
+            DispatchQueue.main.async { accentColor = previousColor }
+        }
     }
 }
