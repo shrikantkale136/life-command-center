@@ -8,7 +8,7 @@ Use the five tabs at the bottom:
 
 - **Today** is your daily overview.
 - **Tasks** holds your open and completed to-dos.
-- **Groceries** is your reusable grocery catalog and current trip.
+- **Groceries** is your reusable grocery catalog and today's shopping list.
 - **Home** holds maintenance and home projects.
 - **Money** holds subscriptions and bills.
 
@@ -23,15 +23,17 @@ Tap the **+** in a tab to open Quick Add. It starts with the matching item type:
 3. Tap **Save Task**. Use the circle beside a task to complete it. For recurring tasks, completing an occurrence creates the next one.
 4. Tap a task to edit it. In Tasks, switch between Open and Completed; swipe a row to delete it.
 
-## Build a grocery trip
+## Plan today's shopping
 
 The **Master catalog** is reusable. Starter staples such as milk, eggs, rice, bread, bananas, and coffee are already there.
 
-1. In **Groceries**, tap **Add** next to an item to put it on Today's trip. Tap the item row to stage it as well.
-2. To add a new staple, tap **+**. The Grocery item form is selected automatically. Enter its name and category; **Add to today's trip** is on by default.
-3. Use **−** and **+** beside a staged item to change its quantity.
-4. Tap the circle to mark an item purchased. It stays on the trip with a strikethrough. Tap its checkmark again to undo an accidental mark.
-5. When the trip is over, tap **Done for the day**. This clears the current trip; catalog items remain for next time.
+1. In **Groceries**, tap **Add** next to an item to put it on **Today's Shopping**. Tap the item row to stage it as well.
+2. To add a new staple, tap the **+** at the right of the Master catalog heading. The Grocery item form is selected automatically. Enter its name and category; **Add to today's shopping** is on by default.
+3. Tap the sliders icon beside the Master catalog heading for all category actions in one place: create a category, reorder rows, rename with the pencil (existing items update too), or delete with the trash button and confirmation (items move to **Other**). **Other** is protected and always stays last. The filter chips, grocery category picker, and items shown under **All** follow the saved order.
+5. In **Today's Shopping**, use **Category** to filter the staged items and **Sort** to show them by name or in your saved category order.
+6. Use **−** and **+** beside a staged item to change its quantity. Pressing **−** at quantity 1 asks for confirmation before removing it from today's shopping; it stays in the catalog.
+7. Tap the circle to mark an item purchased. It stays on the list with a strikethrough. Tap its checkmark again to undo an accidental mark.
+8. When you're finished, tap **Done Shopping**. Every item must be checked first; any unchecked items are outlined in red. Once all are checked, the list clears and catalog items remain for next time.
 
 ![Groceries tab with an item staged from the master catalog](screenshots/groceries.png)
 

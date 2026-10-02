@@ -8,12 +8,14 @@ The five primary tabs are **Today**, **Tasks**, **Groceries**, **Home**, and **M
 
 - **Today:** A daily overview of tasks, upcoming dates, home maintenance, projects, bills, and renewals.
 - **Tasks:** Create, edit, complete, snooze, and delete tasks. Tasks include priority, category, due date, repeat rule, and an optional local reminder.
-- **Groceries:** Keep a reusable master catalog. Stage items and quantities for today's trip, mark purchases with a strikethrough, undo an accidental mark by tapping the check again, and clear the trip with **Done for the day**.
+- **Groceries:** Keep a reusable master catalog. Stage items and quantities for **Today's Shopping**, filter by category, sort by name or saved category order, mark purchases with a strikethrough, undo an accidental mark by tapping the check again, and clear the list with **Done for the day**.
 - **Home:** Track maintenance and home projects. Projects contain checklist tasks and derive progress from completed project tasks.
 - **Money:** Track bills and subscriptions, upcoming dates, monthly and annual subscription costs, and category spending.
 - **More tools:** Calendar, global text search, basic statistics, appearance, preferred name, and notification settings.
 
 Quick Add defaults to a type that fits the selected tab: Task on Today and Tasks, Grocery on Groceries, Maintenance on Home, and Subscription on Money. Other item types remain available in the picker.
+
+The grocery Master catalog has one category manager for creating, editing, reordering, and deleting categories. Deleting a category moves its items into the protected **Other** category, which remains last. The saved order controls category filters, the grocery item category picker, and grouping in the All catalog view.
 
 ## Requirements
 
@@ -80,7 +82,7 @@ Do not distribute the current placeholder bundle identifier or treat the simulat
 
 ## Current limitations
 
-- Custom repeat weekday rules, custom categories/areas, attachments/photos, JSON/CSV export/import, widgets, and Apple integrations are not implemented.
+- Custom grocery categories are supported and stored locally. Custom repeat weekday rules, custom home categories/areas, attachments/photos, JSON/CSV export/import, widgets, and Apple integrations are not implemented.
 - Subscription and maintenance notification schedules are not implemented; see [Notifications currently supported](#notifications-currently-supported).
 - Statistics are a basic local summary; no remote analytics are used.
 - There is no automated test target yet. The project has been built for the iOS Simulator SDK, but the release smoke checks above still need to be run on a simulator and physical device.
