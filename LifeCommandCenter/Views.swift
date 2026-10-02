@@ -43,7 +43,13 @@ struct TodayView: View {
                     if subscriptions.isEmpty { EmptyCard(symbol: "creditcard", title: "No subscriptions yet", subtitle: "Keep renewals and costs in one place.", button: "Add subscription", action: add) }
                     else { VStack(spacing: 0) { ForEach(Array(subscriptions.prefix(3))) { item in HStack { Circle().fill(Color.purple.opacity(0.15)).frame(width: 38, height: 38).overlay(Image(systemName: "arrow.clockwise").foregroundStyle(.purple)); VStack(alignment: .leading, spacing: 3) { Text(item.name).font(.subheadline.weight(.semibold)); Text(item.nextDate.formatted(.dateTime.month(.abbreviated).day())).font(.caption).foregroundStyle(.secondary) }; Spacer(); Text(item.cost.currency).font(.subheadline.weight(.semibold)) }.padding(13) } }.cardStyle() }
                 }.padding(.horizontal, 20).padding(.bottom, 100)
-            }.background(canvas).navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarTrailing) { Button(action: add) { Image(systemName: "plus").font(.headline).foregroundStyle(.white).frame(width: 38, height: 38).background(forest, in: Circle()) }.accessibilityLabel("Quick add") } }
+            }.background(canvas).navigationBarTitleDisplayMode(.inline).toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    NavigationLink { MoreView(add: add) } label: { Image(systemName: "ellipsis.circle") }
+                        .accessibilityLabel("More tools")
+                }
+                ToolbarItem(placement: .topBarTrailing) { Button(action: add) { Image(systemName: "plus").font(.headline).foregroundStyle(.white).frame(width: 38, height: 38).background(forest, in: Circle()) }.accessibilityLabel("Quick add") }
+            }
         }
     }
     private var greeting: String {
@@ -64,6 +70,146 @@ struct TasksView: View {
         if shown.isEmpty { Spacer(); EmptyCard(symbol: "checkmark.circle", title: filter == "Open" ? "You're all caught up" : "No completed tasks yet", subtitle: "Add a task and keep your day moving.", button: "Add task", action: add).padding(20); Spacer() }
         else { List { ForEach(shown) { task in TaskRow(task: task, toggle: { toggle(task) }, edit: { edit(task) }).listRowInsets(EdgeInsets(top: 6, leading: 18, bottom: 6, trailing: 18)).listRowSeparator(.hidden).listRowBackground(Color.clear) }.onDelete { offsets in offsets.map { shown[$0] }.forEach { context.delete($0) } } }.listStyle(.plain) }
         }.background(canvas).navigationTitle("Tasks").toolbar { ToolbarItem(placement: .topBarTrailing) { Button(action: add) { Image(systemName: "plus") } } } } }
+}
+
+struct GroceriesView: View {
+    @Environment(\.modelContext) private var context
+    let items: [GroceryItem]
+    let add: () -> Void
+    @State private var search = ""
+    @State private var category = "All"
+
+    private let categories = ["All", "Produce", "Dairy & Eggs", "Bakery", "Meat & Seafood", "Pantry", "Frozen", "Household", "Other"]
+    private var tripItems: [GroceryItem] { items.filter(\.isStaged).sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending } }
+    private var catalogItems: [GroceryItem] {
+        items.filter { item in
+            (category == "All" || item.category == category) &&
+            (search.isEmpty || item.name.localizedCaseInsensitiveContains(search) || item.category.localizedCaseInsensitiveContains(search))
+        }.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("YOUR REUSABLE LIST").font(.caption.weight(.bold)).tracking(1.4).foregroundStyle(forest)
+                        Text("Groceries").font(.system(size: 32, weight: .bold, design: .rounded))
+                        Text("Keep your staples here. Tap to add them to today's trip.").font(.subheadline).foregroundStyle(.secondary)
+                    }.padding(.top, 10)
+
+                    VStack(alignment: .leading, spacing: 13) {
+                        SectionHeading(title: "Today's trip", subtitle: tripItems.isEmpty ? "Ready when you are" : "\(tripItems.count) \(tripItems.count == 1 ? "item" : "items")")
+                        if tripItems.isEmpty {
+                            EmptyCard(symbol: "basket", title: "Your shopping list is clear", subtitle: "Add items from your catalog below. They'll stay saved for next time.", button: "Add grocery", action: add)
+                        } else {
+                            VStack(spacing: 0) {
+                                ForEach(tripItems) { item in
+                                    HStack(spacing: 12) {
+                                        Button { item.isPurchased.toggle() } label: {
+                                            Image(systemName: item.isPurchased ? "checkmark.circle.fill" : "circle").font(.title2)
+                                                .foregroundStyle(item.isPurchased ? forest : forest.opacity(0.65))
+                                        }.buttonStyle(.plain).accessibilityLabel(item.isPurchased ? "Mark \(item.name) not purchased" : "Mark \(item.name) purchased")
+                                        VStack(alignment: .leading, spacing: 3) {
+                                            Text(item.name).font(.subheadline.weight(.semibold)).strikethrough(item.isPurchased)
+                                                .foregroundStyle(item.isPurchased ? .secondary : .primary)
+                                            Text(item.category).font(.caption).foregroundStyle(.secondary)
+                                        }
+                                        Spacer()
+                                        HStack(spacing: 12) {
+                                            Button { item.quantity = max(1, item.quantity - 1) } label: { Image(systemName: "minus.circle").foregroundStyle(.secondary) }
+                                                .buttonStyle(.plain).accessibilityLabel("Decrease \(item.name) quantity")
+                                            Text("\(item.quantity)").font(.subheadline.monospacedDigit().weight(.semibold)).frame(minWidth: 18)
+                                            Button { item.quantity += 1 } label: { Image(systemName: "plus.circle").foregroundStyle(forest) }
+                                                .buttonStyle(.plain).accessibilityLabel("Increase \(item.name) quantity")
+                                        }.disabled(item.isPurchased)
+                                    }.padding(14)
+                                    if item.id != tripItems.last?.id { Divider().padding(.leading, 50) }
+                                }
+                            }.cardStyle()
+                            Text("Tap the circle to mark an item purchased. It stays here until you finish the trip.")
+                                .font(.caption).foregroundStyle(.secondary).padding(.horizontal, 3)
+                            HStack {
+                                Spacer()
+                                Button(action: finishTrip) {
+                                    Label("Done for the day", systemImage: "checkmark.circle.fill")
+                                        .font(.subheadline.weight(.semibold)).padding(.horizontal, 16).padding(.vertical, 11)
+                                }.buttonStyle(.borderedProminent).tint(forest)
+                            }
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: 13) {
+                        HStack {
+                            SectionHeading(title: "Master catalog", subtitle: "Reusable favorites, ready to stage")
+                            Spacer()
+                            Button(action: add) { Image(systemName: "plus.circle.fill").font(.title2).foregroundStyle(forest) }
+                                .accessibilityLabel("Add grocery to catalog")
+                        }
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(categories, id: \.self) { option in
+                                    Button { category = option } label: {
+                                        Text(option).font(.caption.weight(.semibold)).padding(.horizontal, 13).padding(.vertical, 8)
+                                            .foregroundStyle(category == option ? Color.white : Color.primary)
+                                            .background(category == option ? forest : Color(uiColor: .secondarySystemGroupedBackground), in: Capsule())
+                                    }.buttonStyle(.plain)
+                                }
+                            }
+                        }
+                        if catalogItems.isEmpty {
+                            EmptyCard(symbol: "list.bullet.rectangle", title: search.isEmpty ? "No catalog items here" : "No matches", subtitle: "Add an item once and keep it for future shopping trips.", button: "Add grocery", action: add)
+                        } else {
+                            VStack(spacing: 0) {
+                                ForEach(catalogItems) { item in
+                                    HStack(spacing: 12) {
+                                        Image(systemName: categorySymbol(item.category)).font(.subheadline).foregroundStyle(forest)
+                                            .frame(width: 36, height: 36).background(forest.opacity(0.1), in: RoundedRectangle(cornerRadius: 11))
+                                        VStack(alignment: .leading, spacing: 3) {
+                                            Text(item.name).font(.subheadline.weight(.semibold))
+                                            Text(item.category).font(.caption).foregroundStyle(.secondary)
+                                        }
+                                        Spacer()
+                                        if item.isStaged {
+                                            Label("On trip", systemImage: "checkmark").font(.caption.weight(.semibold)).foregroundStyle(forest)
+                                        } else {
+                                            Button { stage(item) } label: {
+                                                Label("Add", systemImage: "plus").font(.caption.weight(.semibold)).padding(.horizontal, 12).padding(.vertical, 8)
+                                                    .foregroundStyle(forest).background(forest.opacity(0.1), in: Capsule())
+                                            }.buttonStyle(.plain)
+                                        }
+                                    }.padding(13).contentShape(Rectangle())
+                                        .onTapGesture { if !item.isStaged { stage(item) } }
+                                        .contextMenu {
+                                            if !item.isStaged { Button("Add to today's trip", systemImage: "plus") { stage(item) } }
+                                            Button("Delete from catalog", systemImage: "trash", role: .destructive) { context.delete(item) }
+                                        }
+                                    if item.id != catalogItems.last?.id { Divider().padding(.leading, 62) }
+                                }
+                            }.cardStyle()
+                        }
+                    }
+                }.padding(.horizontal, 20).padding(.bottom, 40)
+            }.background(canvas)
+                .navigationTitle("Groceries")
+                .navigationBarTitleDisplayMode(.inline)
+                .searchable(text: $search, prompt: "Search your catalog")
+                .toolbar { ToolbarItem(placement: .topBarTrailing) { Button(action: add) { Image(systemName: "plus") } } }
+        }
+    }
+
+    private func stage(_ item: GroceryItem) { item.quantity = 1; item.isPurchased = false; item.isStaged = true }
+    private func finishTrip() {
+        tripItems.forEach { item in
+            if item.isPurchased { item.lastPurchasedAt = .now }
+            item.isStaged = false
+            item.isPurchased = false
+            item.quantity = 1
+        }
+    }
+    private func categorySymbol(_ category: String) -> String {
+        switch category { case "Produce": "leaf.fill"; case "Dairy & Eggs": "drop.fill"; case "Bakery": "basket.fill"; case "Meat & Seafood": "fish.fill"; case "Frozen": "snowflake"; case "Household": "house.fill"; default: "takeoutbag.and.cup.and.straw.fill" }
+    }
 }
 
 struct HomeView: View {
@@ -125,9 +271,10 @@ extension Double { var currency: String { formatted(.currency(code: Locale.curre
 
 struct QuickAddView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var type = "Task"
-    private let types = ["Task", "Reminder", "Chore", "Maintenance", "Project", "Subscription", "Bill"]
-    var body: some View { NavigationStack { Form { Section { Picker("What would you like to add?", selection: $type) { ForEach(types, id: \.self) { Text($0) } }.pickerStyle(.menu) }; Section { switch type { case "Task", "Reminder", "Chore": TaskCreateFields(kind: type, done: { dismiss() }); case "Maintenance": MaintenanceCreateFields(done: { dismiss() }); case "Project": ProjectCreateFields(done: { dismiss() }); case "Subscription": SubscriptionCreateFields(done: { dismiss() }); default: BillCreateFields(done: { dismiss() }) } } }.navigationTitle("Quick add").navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarLeading) { Button("Close") { dismiss() } } } } }
+    @State private var type: String
+    init(initialType: String) { _type = State(initialValue: initialType) }
+    private let types = ["Task", "Reminder", "Chore", "Grocery item", "Maintenance", "Project", "Subscription", "Bill"]
+    var body: some View { NavigationStack { Form { Section { Picker("What would you like to add?", selection: $type) { ForEach(types, id: \.self) { Text($0) } }.pickerStyle(.menu) }; Section { switch type { case "Task", "Reminder", "Chore": TaskCreateFields(kind: type, done: { dismiss() }); case "Grocery item": GroceryCreateFields(done: { dismiss() }); case "Maintenance": MaintenanceCreateFields(done: { dismiss() }); case "Project": ProjectCreateFields(done: { dismiss() }); case "Subscription": SubscriptionCreateFields(done: { dismiss() }); default: BillCreateFields(done: { dismiss() }) } } }.navigationTitle("Quick add").navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarLeading) { Button("Close") { dismiss() } } } } }
 }
 
 struct TaskCreateFields: View {
@@ -160,6 +307,32 @@ struct BillCreateFields: View {
     var body: some View { TextField("Bill name", text: $name); TextField("Amount", text: $amount).keyboardType(.decimalPad); DatePicker("Due date", selection: $due, displayedComponents: .date); Picker("Frequency", selection: $frequency) { ForEach(["Weekly", "Monthly", "Quarterly", "Annual"], id: \.self) { Text($0) } }; Toggle("Remind me", isOn: $reminder); Button("Save bill") { guard !name.isEmpty else { return }; let bill = BillItem(name: name, amount: Double(amount) ?? 0, dueDate: due, frequency: frequency); context.insert(bill); if reminder { NotificationService.schedule(id: bill.persistentModelID.hashValue.description, title: "\(name) is due", date: due) }; done() }.disabled(name.isEmpty) }
 }
 
+struct GroceryCreateFields: View {
+    @Environment(\.modelContext) private var context
+    @Query private var existingItems: [GroceryItem]
+    @State private var name = ""
+    @State private var category = "Other"
+    @State private var addToTrip = true
+    let done: () -> Void
+    private let categories = ["Produce", "Dairy & Eggs", "Bakery", "Meat & Seafood", "Pantry", "Frozen", "Household", "Other"]
+
+    var body: some View {
+        TextField("Item name", text: $name)
+        Picker("Category", selection: $category) { ForEach(categories, id: \.self) { Text($0) } }
+        Toggle("Add to today's trip", isOn: $addToTrip)
+        Button("Save grocery") {
+            let cleaned = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !cleaned.isEmpty else { return }
+            if let existing = existingItems.first(where: { $0.name.localizedCaseInsensitiveCompare(cleaned) == .orderedSame }) {
+                if addToTrip { existing.quantity = 1; existing.isPurchased = false; existing.isStaged = true }
+            } else {
+                context.insert(GroceryItem(name: cleaned, category: category, isStaged: addToTrip))
+            }
+            done()
+        }.disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+    }
+}
+
 struct TaskEditor: View {
     @Environment(\.dismiss) private var dismiss; @Environment(\.modelContext) private var context; @Bindable var task: TaskItem
     var body: some View { NavigationStack { Form { TextField("Title", text: $task.title); TextField("Notes", text: $task.detail, axis: .vertical); DatePicker("Due", selection: $task.dueDate, displayedComponents: [.date, .hourAndMinute]); Picker("Priority", selection: $task.priorityRaw) { ForEach(TaskPriority.allCases) { Text($0.rawValue).tag($0.rawValue) } }; Picker("Category", selection: $task.category) { ForEach(["Personal", "Work", "Home", "Finance", "Shopping", "Health", "Family", "Other"], id: \.self) { Text($0) } }; Picker("Repeat", selection: $task.repeatRaw) { ForEach(RepeatRule.allCases) { Text($0.rawValue).tag($0.rawValue) } }; Toggle("Remind me", isOn: $task.reminderEnabled); Section { Button("Delete task", role: .destructive) { context.delete(task); dismiss() } } }.navigationTitle("Edit task").navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarLeading) { Button("Cancel") { dismiss() } }; ToolbarItem(placement: .topBarTrailing) { Button("Save") { if task.reminderEnabled { NotificationService.schedule(id: task.persistentModelID.hashValue.description, title: task.title, date: task.dueDate) }; dismiss() }.fontWeight(.semibold) } } } }
@@ -172,9 +345,9 @@ struct CalendarView: View {
 }
 
 struct SearchView: View {
-    @Query private var tasks: [TaskItem]; @Query private var projects: [HomeProject]; @Query private var maint: [HomeMaintenance]; @Query private var subs: [SubscriptionItem]; @Query private var bills: [BillItem]
+    @Query private var tasks: [TaskItem]; @Query private var projects: [HomeProject]; @Query private var maint: [HomeMaintenance]; @Query private var subs: [SubscriptionItem]; @Query private var bills: [BillItem]; @Query private var groceries: [GroceryItem]
     @State private var query = ""
-    var body: some View { List { ForEach(tasks.filter { matches($0.title, $0.detail) }) { Label($0.title, systemImage: "checkmark.circle") }; ForEach(projects.filter { matches($0.name, $0.detail) }) { Label($0.name, systemImage: "hammer") }; ForEach(maint.filter { matches($0.name, $0.detail, $0.notes) }) { Label($0.name, systemImage: "wrench.and.screwdriver") }; ForEach(subs.filter { matches($0.name, $0.category, $0.notes) }) { Label($0.name, systemImage: "arrow.clockwise") }; ForEach(bills.filter { matches($0.name, $0.notes) }) { Label($0.name, systemImage: "doc.text") } }.searchable(text: $query, prompt: "Tasks, home, bills…").navigationTitle("Search") }
+    var body: some View { List { ForEach(tasks.filter { matches($0.title, $0.detail) }) { Label($0.title, systemImage: "checkmark.circle") }; ForEach(projects.filter { matches($0.name, $0.detail) }) { Label($0.name, systemImage: "hammer") }; ForEach(maint.filter { matches($0.name, $0.detail, $0.notes) }) { Label($0.name, systemImage: "wrench.and.screwdriver") }; ForEach(subs.filter { matches($0.name, $0.category, $0.notes) }) { Label($0.name, systemImage: "arrow.clockwise") }; ForEach(bills.filter { matches($0.name, $0.notes) }) { Label($0.name, systemImage: "doc.text") }; ForEach(groceries.filter { matches($0.name, $0.category) }) { Label($0.name, systemImage: "basket") } }.searchable(text: $query, prompt: "Tasks, home, groceries…").navigationTitle("Search") }
     private func matches(_ values: String...) -> Bool { !query.isEmpty && values.contains { $0.localizedCaseInsensitiveContains(query) } }
 }
 

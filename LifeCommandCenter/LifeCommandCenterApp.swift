@@ -5,7 +5,7 @@ import UserNotifications
 @main
 struct LifeCommandCenterApp: App {
     let container: ModelContainer = {
-        let schema = Schema([TaskItem.self, HomeMaintenance.self, HomeProject.self, ProjectTask.self, SubscriptionItem.self, BillItem.self])
+        let schema = Schema([TaskItem.self, HomeMaintenance.self, HomeProject.self, ProjectTask.self, SubscriptionItem.self, BillItem.self, GroceryItem.self])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         return try! ModelContainer(for: schema, configurations: [config])
     }()
@@ -103,6 +103,24 @@ enum RepeatRule: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+@Model final class GroceryItem {
+    var name: String
+    var category: String
+    var isStaged: Bool
+    var isPurchased: Bool = false
+    var quantity: Int
+    var lastPurchasedAt: Date?
+    var createdAt: Date
+    init(name: String, category: String = "Other", isStaged: Bool = false, isPurchased: Bool = false, quantity: Int = 1) {
+        self.name = name
+        self.category = category
+        self.isStaged = isStaged
+        self.isPurchased = isPurchased
+        self.quantity = quantity
+        self.createdAt = .now
+    }
+}
+
 struct RootView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \TaskItem.dueDate) private var tasks: [TaskItem]
@@ -110,28 +128,32 @@ struct RootView: View {
     @Query(sort: \HomeProject.targetDate) private var projects: [HomeProject]
     @Query(sort: \SubscriptionItem.nextDate) private var subscriptions: [SubscriptionItem]
     @Query(sort: \BillItem.dueDate) private var bills: [BillItem]
+    @Query(sort: \GroceryItem.name) private var groceries: [GroceryItem]
     @State private var selectedTab = 0
     @State private var quickAdd = false
+    @State private var quickAddType = "Task"
+    @State private var quickAddGeneration = 0
     @State private var editTask: TaskItem?
     @AppStorage("didSeedInitialData") private var didSeed = false
+    @AppStorage("didSeedGroceryCatalog") private var didSeedGroceries = false
     @AppStorage("appearance") private var appearance = "System"
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            TodayView(tasks: tasks, maintenance: maintenance, projects: projects, subscriptions: subscriptions, bills: bills, add: { quickAdd = true }, edit: { editTask = $0 }, toggle: toggleTask)
+            TodayView(tasks: tasks, maintenance: maintenance, projects: projects, subscriptions: subscriptions, bills: bills, add: openQuickAdd, edit: { editTask = $0 }, toggle: toggleTask)
                 .tabItem { Label("Today", systemImage: "sun.max.fill") }.tag(0)
-            TasksView(tasks: tasks, add: { quickAdd = true }, edit: { editTask = $0 }, toggle: toggleTask)
+            TasksView(tasks: tasks, add: openQuickAdd, edit: { editTask = $0 }, toggle: toggleTask)
                 .tabItem { Label("Tasks", systemImage: "checklist") }.tag(1)
-            HomeView(maintenance: maintenance, projects: projects, add: { quickAdd = true })
-                .tabItem { Label("Home", systemImage: "house.fill") }.tag(2)
-            SubscriptionsView(items: subscriptions, bills: bills, add: { quickAdd = true })
-                .tabItem { Label("Money", systemImage: "creditcard.fill") }.tag(3)
-            MoreView(add: { quickAdd = true })
-                .tabItem { Label("More", systemImage: "square.grid.2x2.fill") }.tag(4)
+            GroceriesView(items: groceries, add: openQuickAdd)
+                .tabItem { Label("Groceries", systemImage: "basket.fill") }.tag(2)
+            HomeView(maintenance: maintenance, projects: projects, add: openQuickAdd)
+                .tabItem { Label("Home", systemImage: "house.fill") }.tag(3)
+            SubscriptionsView(items: subscriptions, bills: bills, add: openQuickAdd)
+                .tabItem { Label("Money", systemImage: "creditcard.fill") }.tag(4)
         }
         .tint(Color(red: 0.27, green: 0.42, blue: 0.35))
         .preferredColorScheme(appearance == "Dark" ? .dark : appearance == "Light" ? .light : nil)
-        .sheet(isPresented: $quickAdd) { QuickAddView() }
+        .sheet(isPresented: $quickAdd) { QuickAddView(initialType: quickAddType).id(quickAddGeneration) }
         .sheet(item: $editTask) { task in TaskEditor(task: task) }
         .task { seedIfNeeded() }
     }
@@ -145,9 +167,31 @@ struct RootView: View {
         if task.reminderEnabled { NotificationService.cancel(id: task.persistentModelID.hashValue.description) }
     }
 
+    private func openQuickAdd() {
+        switch selectedTab {
+        case 2: quickAddType = "Grocery item"
+        case 3: quickAddType = "Maintenance"
+        case 4: quickAddType = "Subscription"
+        default: quickAddType = "Task"
+        }
+        quickAddGeneration += 1
+        quickAdd = true
+    }
+
     private func seedIfNeeded() {
+        if !didSeedGroceries && groceries.isEmpty {
+            [
+                GroceryItem(name: "Milk", category: "Dairy & Eggs"),
+                GroceryItem(name: "Eggs", category: "Dairy & Eggs"),
+                GroceryItem(name: "Rice", category: "Pantry"),
+                GroceryItem(name: "Bread", category: "Bakery"),
+                GroceryItem(name: "Bananas", category: "Produce"),
+                GroceryItem(name: "Coffee", category: "Pantry")
+            ].forEach { context.insert($0) }
+            didSeedGroceries = true
+        }
         guard !didSeed else { return }; didSeed = true
-        guard tasks.isEmpty && maintenance.isEmpty && projects.isEmpty && subscriptions.isEmpty && bills.isEmpty else { return }
+        guard tasks.isEmpty && maintenance.isEmpty && projects.isEmpty && subscriptions.isEmpty && bills.isEmpty && groceries.isEmpty else { return }
         let cal = Calendar.current
         let samples = [
             TaskItem(title: "Buy groceries", dueDate: .now, category: "Shopping", reminderEnabled: false),
