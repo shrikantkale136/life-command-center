@@ -132,7 +132,6 @@ struct RootView: View {
     @State private var selectedTab = 0
     @State private var quickAdd = false
     @State private var quickAddType = "Task"
-    @State private var quickAddGeneration = 0
     @State private var editTask: TaskItem?
     @AppStorage("didSeedInitialData") private var didSeed = false
     @AppStorage("didSeedGroceryCatalog") private var didSeedGroceries = false
@@ -140,20 +139,20 @@ struct RootView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            TodayView(tasks: tasks, maintenance: maintenance, projects: projects, subscriptions: subscriptions, bills: bills, add: openQuickAdd, edit: { editTask = $0 }, toggle: toggleTask)
+            TodayView(tasks: tasks, maintenance: maintenance, projects: projects, subscriptions: subscriptions, bills: bills, add: { openQuickAdd(defaultType: "Task") }, edit: { editTask = $0 }, toggle: toggleTask)
                 .tabItem { Label("Today", systemImage: "sun.max.fill") }.tag(0)
-            TasksView(tasks: tasks, add: openQuickAdd, edit: { editTask = $0 }, toggle: toggleTask)
+            TasksView(tasks: tasks, add: { openQuickAdd(defaultType: "Task") }, edit: { editTask = $0 }, toggle: toggleTask)
                 .tabItem { Label("Tasks", systemImage: "checklist") }.tag(1)
-            GroceriesView(items: groceries, add: openQuickAdd)
+            GroceriesView(items: groceries, add: { openQuickAdd(defaultType: "Grocery item") })
                 .tabItem { Label("Groceries", systemImage: "basket.fill") }.tag(2)
-            HomeView(maintenance: maintenance, projects: projects, add: openQuickAdd)
+            HomeView(maintenance: maintenance, projects: projects, add: { openQuickAdd(defaultType: "Maintenance") })
                 .tabItem { Label("Home", systemImage: "house.fill") }.tag(3)
-            SubscriptionsView(items: subscriptions, bills: bills, add: openQuickAdd)
+            SubscriptionsView(items: subscriptions, bills: bills, add: { openQuickAdd(defaultType: "Subscription") })
                 .tabItem { Label("Money", systemImage: "creditcard.fill") }.tag(4)
         }
         .tint(Color(red: 0.27, green: 0.42, blue: 0.35))
         .preferredColorScheme(appearance == "Dark" ? .dark : appearance == "Light" ? .light : nil)
-        .sheet(isPresented: $quickAdd) { QuickAddView(initialType: quickAddType).id(quickAddGeneration) }
+        .sheet(isPresented: $quickAdd) { QuickAddView(type: $quickAddType) }
         .sheet(item: $editTask) { task in TaskEditor(task: task) }
         .task { seedIfNeeded() }
     }
@@ -167,14 +166,8 @@ struct RootView: View {
         if task.reminderEnabled { NotificationService.cancel(id: task.persistentModelID.hashValue.description) }
     }
 
-    private func openQuickAdd() {
-        switch selectedTab {
-        case 2: quickAddType = "Grocery item"
-        case 3: quickAddType = "Maintenance"
-        case 4: quickAddType = "Subscription"
-        default: quickAddType = "Task"
-        }
-        quickAddGeneration += 1
+    private func openQuickAdd(defaultType: String) {
+        quickAddType = defaultType
         quickAdd = true
     }
 

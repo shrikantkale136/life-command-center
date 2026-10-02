@@ -271,10 +271,9 @@ extension Double { var currency: String { formatted(.currency(code: Locale.curre
 
 struct QuickAddView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var type: String
-    init(initialType: String) { _type = State(initialValue: initialType) }
+    @Binding var type: String
     private let types = ["Task", "Reminder", "Chore", "Grocery item", "Maintenance", "Project", "Subscription", "Bill"]
-    var body: some View { NavigationStack { Form { Section { Picker("What would you like to add?", selection: $type) { ForEach(types, id: \.self) { Text($0) } }.pickerStyle(.menu) }; Section { switch type { case "Task", "Reminder", "Chore": TaskCreateFields(kind: type, done: { dismiss() }); case "Grocery item": GroceryCreateFields(done: { dismiss() }); case "Maintenance": MaintenanceCreateFields(done: { dismiss() }); case "Project": ProjectCreateFields(done: { dismiss() }); case "Subscription": SubscriptionCreateFields(done: { dismiss() }); default: BillCreateFields(done: { dismiss() }) } } }.navigationTitle("Quick add").navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarLeading) { Button("Close") { dismiss() } } } } }
+    var body: some View { NavigationStack { Form { Section { Picker("What would you like to add?", selection: $type) { ForEach(types, id: \.self) { Text($0).tag($0) } }.pickerStyle(.menu) }; Section { switch type { case "Task", "Reminder", "Chore": TaskCreateFields(kind: type, done: { dismiss() }); case "Grocery item": GroceryCreateFields(done: { dismiss() }); case "Maintenance": MaintenanceCreateFields(done: { dismiss() }); case "Project": ProjectCreateFields(done: { dismiss() }); case "Subscription": SubscriptionCreateFields(done: { dismiss() }); default: BillCreateFields(done: { dismiss() }) } } }.navigationTitle("Quick add").navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarLeading) { Button("Close") { dismiss() } } } } }
 }
 
 struct TaskCreateFields: View {

@@ -35,6 +35,7 @@ The app is named **Daykeeper** on the Home Screen. On a new install, it adds exa
 ## Architecture
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the component diagram, model relationships, and data flow.
+For everyday workflows with screenshots, see the [Daykeeper quick guide](Docs/HOW_TO_USE.md).
 
 At a glance, `LifeCommandCenterApp.swift` defines the SwiftData schema, local models, app entry point, and notification service. `Views.swift` contains the tab screens, reusable components, and forms. Screens observe data with `@Query` and edit it through the shared SwiftData `ModelContext`.
 
@@ -94,6 +95,9 @@ iOS App/
 │   ├── LifeCommandCenterApp.swift
 │   ├── Views.swift
 │   └── render_app_icon.swift
+├── Docs/
+│   ├── HOW_TO_USE.md
+│   └── screenshots/
 ├── ARCHITECTURE.md
 └── README.md
 ```

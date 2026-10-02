@@ -133,6 +133,7 @@ Sample household data is inserted once using `@AppStorage` flags. The grocery ca
 - `LifeCommandCenter/Assets.xcassets/AppIcon.appiconset/`: Daykeeper app icon.
 - `LifeCommandCenter/render_app_icon.swift`: deterministic AppKit script used to render the source app icon PNG.
 - `LifeCommandCenter.xcodeproj/`: Xcode application target and build settings.
+- `Docs/HOW_TO_USE.md` and `Docs/screenshots/`: end-user quick guide and simulator captures.
 
 The current MVP keeps the SwiftUI application in two source files. If the app grows, split models, screens, services, and shared components into the folders described in the source map without changing the ownership of the SwiftData container.
 
