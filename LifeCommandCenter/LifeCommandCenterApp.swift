@@ -23,6 +23,29 @@ enum TaskPriority: String, CaseIterable, Identifiable, Codable {
     var color: Color { switch self { case .low: .blue; case .medium: .orange; case .high: .pink; case .urgent: .red } }
 }
 
+enum AppAccentColor: String, CaseIterable, Identifiable {
+    case forest = "Forest", blue = "Blue", indigo = "Indigo", purple = "Purple", pink = "Pink", orange = "Orange", teal = "Teal"
+    var id: String { rawValue }
+    var color: Color {
+        switch self {
+        case .forest: Color(red: 0.27, green: 0.42, blue: 0.35)
+        case .blue: .blue
+        case .indigo: .indigo
+        case .purple: .purple
+        case .pink: .pink
+        case .orange: .orange
+        case .teal: .teal
+        }
+    }
+    static func color(named name: String) -> Color { allCases.first { $0.rawValue == name }?.color ?? .init(red: 0.27, green: 0.42, blue: 0.35) }
+}
+
+enum AppFontSize {
+    static func dynamicTypeSize(for selection: String) -> DynamicTypeSize {
+        switch selection { case "Small": .small; case "Large": .xxxLarge; default: .large }
+    }
+}
+
 enum RepeatRule: String, CaseIterable, Identifiable, Codable {
     case none = "Never", daily = "Daily", weekly = "Weekly", monthly = "Monthly", quarterly = "Quarterly", yearly = "Yearly"
     var id: String { rawValue }
@@ -136,6 +159,8 @@ struct RootView: View {
     @AppStorage("didSeedInitialData") private var didSeed = false
     @AppStorage("didSeedGroceryCatalog") private var didSeedGroceries = false
     @AppStorage("appearance") private var appearance = "System"
+    @AppStorage("appAccentColor") private var appAccentColor = "Forest"
+    @AppStorage("appFontSize") private var appFontSize = "Medium"
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -150,7 +175,8 @@ struct RootView: View {
             SubscriptionsView(items: subscriptions, bills: bills, add: { openQuickAdd(defaultType: "Subscription") })
                 .tabItem { Label("Money", systemImage: "creditcard.fill") }.tag(4)
         }
-        .tint(Color(red: 0.27, green: 0.42, blue: 0.35))
+        .tint(AppAccentColor.color(named: appAccentColor))
+        .environment(\.dynamicTypeSize, AppFontSize.dynamicTypeSize(for: appFontSize))
         .preferredColorScheme(appearance == "Dark" ? .dark : appearance == "Light" ? .light : nil)
         .sheet(isPresented: $quickAdd) { QuickAddView(type: $quickAddType) }
         .sheet(item: $editTask) { task in TaskEditor(task: task) }
