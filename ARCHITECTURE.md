@@ -7,11 +7,16 @@ flowchart TD
     App[LifeCommandCenterApp]
     Schema[SwiftData Schema and ModelContainer]
     Store[(On-device SwiftData store)]
-    Root[RootView / tab selection]
+    Root[App / RootView]
+    VM[RootViewModel]
+    Repository[Repositories]
+    Components[Shared Components]
 
     App --> Schema
     Schema --> Store
     App --> Root
+    Root --> VM
+    Root --> Repository
     Root --> Today[TodayView]
     Root --> Tasks[TasksView]
     Root --> Groceries[GroceriesView]
@@ -26,7 +31,7 @@ flowchart TD
     Money --> Queries
     More --> Queries
     Queries[@Query reads]
-    Mutations[ModelContext inserts and edits]
+    Mutations[Feature edits through ModelContext]
     Today --> Mutations
     Tasks --> Mutations
     Groceries --> Mutations
@@ -34,6 +39,7 @@ flowchart TD
     Money --> Mutations
     Mutations --> Store
     Store --> Queries
+    Repository --> Mutations
 
     QuickAdd[QuickAddView and item forms]
     Root -->|tab-aware default type| QuickAdd
@@ -50,7 +56,7 @@ flowchart TD
     UN --> Device[Local iOS notification]
 ```
 
-All features use the same local SwiftData container. Views query the shared store and write through the environment `ModelContext`; there is no repository, API client, or remote persistence layer.
+All features use the same local SwiftData container. Feature views read through `@Query`; task completion and sample-data seeding are isolated in repositories that write through `ModelContext`. There is no API client or remote persistence layer. Shared visual elements and design tokens live in `Components`.
 
 ## Data model
 
@@ -118,24 +124,35 @@ classDiagram
 
 ## App entry and persistence
 
-1. `LifeCommandCenterApp` declares the SwiftData schema and creates the on-device `ModelContainer`.
-2. The container is injected into `RootView` with `.modelContainer(container)`.
-3. `RootView` owns tab selection, routes Quick Add to a tab-specific initial type, and supplies queried model collections to screens.
-4. Each feature view renders `@Query` results and mutates models through `ModelContext`.
+1. `App/LifeCommandCenterApp` declares the SwiftData schema and creates the on-device `ModelContainer`.
+2. The container is injected into `App/RootView` with `.modelContainer(container)`.
+3. `RootView` connects tab selection and Quick Add routing to `RootViewModel`, then supplies queried models to feature screens.
+4. Feature views render `@Query` results. Task completion and sample-data creation go through repository types; other feature edits use the environment `ModelContext`.
 5. SwiftData persists those changes locally; the app does not manually serialize records or call a server.
 
 Sample household data is inserted once using `@AppStorage` flags. The grocery catalog has its own seed flag so existing installs can receive starter staples once without reseeding the rest of the household.
 
 ## Source map
 
-- `LifeCommandCenter/LifeCommandCenterApp.swift`: app entry, SwiftData models and schema, root navigation, sample seeding, recurrence helper, local notification service.
-- `LifeCommandCenter/Views.swift`: tabs, dashboard, task and grocery workflows, home/money screens, calendar/search/statistics/settings, Quick Add, and editors.
-- `LifeCommandCenter/Assets.xcassets/AppIcon.appiconset/`: Home Manager app icon.
-- `LifeCommandCenter/render_app_icon.swift`: deterministic AppKit script used to render the source app icon PNG.
-- `LifeCommandCenter.xcodeproj/`: Xcode application target and build settings.
-- `Docs/HOW_TO_USE.md` and `Docs/screenshots/`: end-user quick guide and simulator captures.
+```text
+LifeCommandCenter/
+├── App/                 # App entry point and root navigation
+├── Models/              # SwiftData entities and app-wide enums
+├── Views/               # Dashboard and feature screens, grouped by feature
+├── ViewModels/          # Observable navigation and presentation state
+├── Services/            # Local notifications and platform integrations
+├── Repositories/        # Persistence workflows and sample data
+├── Components/          # Reusable UI, design tokens, and row/card components
+├── Assets.xcassets/     # App icons and image assets
+└── Tools/               # Development-only asset-generation scripts
+Tests/LifeCommandCenterTests/ # XCTest coverage for shared business rules
+```
 
-The current MVP keeps the SwiftUI application in two source files. If the app grows, split models, screens, services, and shared components into the folders described in the source map without changing the ownership of the SwiftData container.
+The Xcode project has a separate `LifeCommandCenterTests` unit-test target. `RepeatRuleTests` is the initial test suite; add feature-specific repository and view-model tests alongside it as those layers grow.
+
+- `LifeCommandCenter.xcodeproj/`: app and XCTest targets and shared scheme.
+- `ARCHITECTURE.md`: component diagram, model relationships, and data flow.
+- `Docs/HOW_TO_USE.md` and `Docs/screenshots/`: end-user quick guide and screenshots.
 
 ## Extension points
 

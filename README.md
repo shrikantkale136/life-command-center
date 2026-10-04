@@ -4,7 +4,7 @@ Home Manager is an offline-first personal life-management app for iPhone. It bri
 
 ## Product overview
 
-The five primary tabs are **Today**, **Tasks**, **Groceries**, **Home**, and **Money**. Calendar, Search, Statistics, and Settings are available from the More tools button on Today.
+The five primary tabs are **Today**, **Groceries**, **Home**, **Money**, and **Settings**. Open Calendar from the calendar icon on Today. Search and Statistics are available under **Settings → More tools**.
 
 - **Today:** A daily overview of tasks, upcoming dates, home maintenance, projects, bills, and renewals.
 - **Tasks:** Create, edit, complete, snooze, and delete tasks. Tasks include priority, category, due date, repeat rule, and an optional local reminder.
@@ -13,7 +13,7 @@ The five primary tabs are **Today**, **Tasks**, **Groceries**, **Home**, and **M
 - **Money:** Track bills and subscriptions, upcoming dates, monthly and annual subscription costs, and category spending.
 - **More tools:** Calendar, global text search, basic statistics, appearance, preferred name, and notification settings.
 
-Quick Add defaults to a type that fits the selected tab: Task on Today and Tasks, Grocery on Groceries, Maintenance on Home, and Subscription on Money. Other item types remain available in the picker.
+Quick Add defaults to a type that fits the selected tab: Task on Today, Grocery on Groceries, Maintenance on Home, and Subscription on Money. Calendar's Add Event action opens Quick Add with Task selected. Other item types remain available in the picker.
 
 The grocery Master catalog has one category manager for creating, editing, reordering, and deleting categories. Deleting a category moves its items into the protected **Other** category, which remains last. The saved order controls category filters, the grocery item category picker, and grouping in the All catalog view.
 
@@ -39,7 +39,7 @@ The app is named **Home Manager** on the Home Screen. On a new install, it adds 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the component diagram, model relationships, and data flow.
 For everyday workflows with screenshots, see the [Home Manager quick guide](Docs/HOW_TO_USE.md).
 
-At a glance, `LifeCommandCenterApp.swift` defines the SwiftData schema, local models, app entry point, and notification service. `Views.swift` contains the tab screens, reusable components, and forms. Screens observe data with `@Query` and edit it through the shared SwiftData `ModelContext`.
+The app is split by responsibility: app composition in `LifeCommandCenter/App`, SwiftData types in `Models`, feature screens in `Views`, shared UI in `Components`, observable routing state in `ViewModels`, persistence workflows in `Repositories`, and notification delivery in `Services`. `Tests/LifeCommandCenterTests` contains the XCTest target.
 
 ## Data and privacy
 
@@ -52,7 +52,7 @@ At a glance, `LifeCommandCenterApp.swift` defines the SwiftData schema, local mo
 
 ### Persistence and upgrades
 
-The app creates its SwiftData `ModelContainer` from the model schema in `LifeCommandCenterApp.swift`. Lightweight store migration is inferred by SwiftData. The `GroceryItem.isPurchased` field has an explicit `false` default so records created by the earlier grocery schema can migrate as unpurchased. Avoid deleting the app or its store to work around a migration failure; preserve the store and investigate the migration first.
+The app creates its SwiftData `ModelContainer` from the model schema in `LifeCommandCenter/App/LifeCommandCenterApp.swift`. Lightweight store migration is inferred by SwiftData. The `GroceryItem.isPurchased` field has an explicit `false` default so records created by the earlier grocery schema can migrate as unpurchased. Avoid deleting the app or its store to work around a migration failure; preserve the store and investigate the migration first.
 
 For future schema changes, add an explicit `VersionedSchema` and `SchemaMigrationPlan` before shipping changes that cannot be handled by lightweight migration. The current app container uses `try!` during startup, so an unrecoverable store-opening error will stop launch; production hardening should replace this with a user-facing recovery and support flow.
 
@@ -85,7 +85,7 @@ Do not distribute the current placeholder bundle identifier or treat the simulat
 - Custom grocery categories are supported and stored locally. Custom repeat weekday rules, custom home categories/areas, attachments/photos, JSON/CSV export/import, widgets, and Apple integrations are not implemented.
 - Subscription and maintenance notification schedules are not implemented; see [Notifications currently supported](#notifications-currently-supported).
 - Statistics are a basic local summary; no remote analytics are used.
-- There is no automated test target yet. The project has been built for the iOS Simulator SDK, but the release smoke checks above still need to be run on a simulator and physical device.
+- The initial XCTest target covers recurrence date calculations. Release smoke checks above still need to be run on a simulator and physical device.
 
 ## Project files
 
@@ -93,10 +93,16 @@ Do not distribute the current placeholder bundle identifier or treat the simulat
 iOS App/
 ├── LifeCommandCenter.xcodeproj/
 ├── LifeCommandCenter/
-│   ├── Assets.xcassets/AppIcon.appiconset/
-│   ├── LifeCommandCenterApp.swift
-│   ├── Views.swift
-│   └── render_app_icon.swift
+│   ├── App/
+│   ├── Models/
+│   ├── Views/
+│   ├── ViewModels/
+│   ├── Services/
+│   ├── Repositories/
+│   ├── Components/
+│   ├── Assets.xcassets/
+│   └── Tools/
+├── Tests/LifeCommandCenterTests/
 ├── Docs/
 │   ├── HOW_TO_USE.md
 │   └── screenshots/

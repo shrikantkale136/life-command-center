@@ -7,21 +7,21 @@ This guide covers the everyday actions in Home Manager. Screenshots show the iPh
 Use the five tabs at the bottom:
 
 - **Today** is your daily overview.
-- **Tasks** holds your open and completed to-dos.
 - **Groceries** is your reusable grocery catalog and today's shopping list.
 - **Home** holds maintenance and home projects.
 - **Money** holds subscriptions and bills.
+- **Settings** contains preferences, Search, and Statistics.
 
-Tap the **+** in a tab to open Quick Add. It starts with the matching item type: Task on Today or Tasks, Grocery item on Groceries, Maintenance on Home, and Subscription on Money. Choose a different type from the picker when you need one. Calendar, Search, Statistics, and Settings are under the **…** button on Today.
+Tap the **+** in a tab to open Quick Add. It starts with the matching item type: Task on Today, Grocery item on Groceries, Maintenance on Home, and Subscription on Money. Choose a different type from the picker when you need one. Open Calendar from the calendar icon beside **+** on Today. Calendar's **+** opens Quick Add with Task selected. Tap a calendar event to edit it or long-press it to delete it. Search and Statistics are under **Settings → More tools**.
 
 ![Today dashboard showing tasks, upcoming items, home, and subscription summaries](screenshots/today.png)
 
 ## Manage tasks
 
-1. Tap **+** on Today or Tasks.
+1. Tap **+** on Today.
 2. Enter a title, then adjust the due date, category, priority, repeat schedule, or reminder if needed.
-3. Tap **Save Task**. Use the circle beside a task to complete it. For recurring tasks, completing an occurrence creates the next one.
-4. Tap a task to edit it. In Tasks, switch between Open and Completed; swipe a row to delete it.
+3. Tap **Save Task**. Tap any part of a Today task row to complete or reopen it. Completed tasks stay visible with a strikethrough. For recurring tasks, completing an occurrence creates the next one.
+4. Long-press a task and choose **Edit**. Changes are held as a draft until you tap **Save**; **Cancel** discards them. Delete is available in the editor and requires confirmation.
 
 ## Plan today's shopping
 
