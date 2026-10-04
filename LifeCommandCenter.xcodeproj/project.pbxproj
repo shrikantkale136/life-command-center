@@ -7,16 +7,70 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A10000000000000000000001 /* LifeCommandCenterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000001 /* LifeCommandCenterApp.swift */; };
-		A10000000000000000000002 /* Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000002 /* Views.swift */; };
 		A10000000000000000000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000004 /* Assets.xcassets */; };
+		562485174377431E5EEAA895 /* LifeCommandCenterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CBBCDEABCC38C89ECE6E93F /* LifeCommandCenterApp.swift */; };
+		9311BDA99496156ED40972FD /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63D3B4426C2369E5D733759A /* RootView.swift */; };
+		D63C3F5401E87D1C99FDB615 /* CommonComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEC5984FC4FC1AB35F03B0B7 /* CommonComponents.swift */; };
+		9D01D9AC8FA71A343EA4D1E2 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = B30F83C0CD4AEB5EF067BA3E /* DesignTokens.swift */; };
+		8E537E9C4D1125A8A787DF2D /* ProjectCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8958EE7B8055CF90A934F1A6 /* ProjectCard.swift */; };
+		E58BAF00C59FA4C527D75286 /* TaskRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F16A09D440347E57B770655C /* TaskRow.swift */; };
+		7C9F0F2A677ACC5699ACDF15 /* AppTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DE35857FE1855A22019769B /* AppTypes.swift */; };
+		D92A2209C7CF2C4942EE872F /* Entities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36E4ACC0EF915D76CA784BC2 /* Entities.swift */; };
+		FEF543798A41FE3CD365ECFB /* SampleDataRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA07D086BDEF2755AF44EC7 /* SampleDataRepository.swift */; };
+		37CB5F2037B78AF9E36FCF33 /* TaskRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BBA44CD2890478D056F93E2 /* TaskRepository.swift */; };
+		F2C461DB7E7ED4CA508521BF /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEA41489BCC71DA7F7316AAC /* NotificationService.swift */; };
+		99E9D042B6CA41638A82477B /* RootViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41636AC4D30C30F21B36F6CC /* RootViewModel.swift */; };
+		AF3DC4C66EB1E44F8AE2DA7C /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F60762D449D4064BEAA935E /* CalendarView.swift */; };
+		0821356BD85D75E23865AB65 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C85158D47356C981CD061D7 /* TodayView.swift */; };
+		947A36872F10BC5FCE837DD6 /* GroceriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DE5A4814415FC8032E736D /* GroceriesView.swift */; };
+		50F0BD77EE7980D9709BE71E /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9854E55C38D09EFA6FD1DFF7 /* HomeView.swift */; };
+		69FC74C6DB946F8F0594A6A0 /* MoneyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B1D315DF027F2397D0EE2EF /* MoneyView.swift */; };
+		26F12321EFA16CC144B46B4D /* QuickAddView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DAB16C3735490C78343AEA /* QuickAddView.swift */; };
+		CF94F38A47C3686619747558 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07D5A81E37DFE62D5C2AB411 /* SettingsView.swift */; };
+		C4EDAAFEF75BED368A913CA4 /* TaskEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7F62A265B5D36CAB9F5CB8A /* TaskEditor.swift */; };
+		88164397A7D0B36C90395319 /* TasksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5C744133F9DB87AB9A821C4 /* TasksView.swift */; };
+		E6EEB9BAD07B23EE865C8FBE /* RepeatRuleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43FB1784B0B861319EA7A458 /* RepeatRuleTests.swift */; };
+		A1A1A1A1A1A1A1A1A1A1A101 /* ModelLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A1A1A1A1A1A1A1A1A1A102 /* ModelLogicTests.swift */; };
+		A1A1A1A1A1A1A1A1A1A1A103 /* RepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A1A1A1A1A1A1A1A1A1A104 /* RepositoryTests.swift */; };
+		A1A1A1A1A1A1A1A1A1A1A105 /* NotificationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A1A1A1A1A1A1A1A1A1A106 /* NotificationServiceTests.swift */; };
+		A1A1A1A1A1A1A1A1A1A1A107 /* GroceryCategoryCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A1A1A1A1A1A1A1A1A1A108 /* GroceryCategoryCatalogTests.swift */; };
+		A1A1A1A1A1A1A1A1A1A1A109 /* PersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A1A1A1A1A1A1A1A1A1A10A /* PersistenceTests.swift */; };
+		B1B1B1B1B1B1B1B1B1B1B101 /* HomeManagerFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B1B1B1B1B1B1B1B1B1B102 /* HomeManagerFlowTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		B10000000000000000000001 /* LifeCommandCenterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeCommandCenterApp.swift; sourceTree = "<group>"; };
-		B10000000000000000000002 /* Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views.swift; sourceTree = "<group>"; };
 		B10000000000000000000003 /* LifeCommandCenter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LifeCommandCenter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B10000000000000000000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		3CBBCDEABCC38C89ECE6E93F /* LifeCommandCenterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeCommandCenterApp.swift; sourceTree = "<group>"; };
+		63D3B4426C2369E5D733759A /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		AEC5984FC4FC1AB35F03B0B7 /* CommonComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonComponents.swift; sourceTree = "<group>"; };
+		B30F83C0CD4AEB5EF067BA3E /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
+		8958EE7B8055CF90A934F1A6 /* ProjectCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectCard.swift; sourceTree = "<group>"; };
+		F16A09D440347E57B770655C /* TaskRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRow.swift; sourceTree = "<group>"; };
+		9DE35857FE1855A22019769B /* AppTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTypes.swift; sourceTree = "<group>"; };
+		36E4ACC0EF915D76CA784BC2 /* Entities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entities.swift; sourceTree = "<group>"; };
+		7AA07D086BDEF2755AF44EC7 /* SampleDataRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleDataRepository.swift; sourceTree = "<group>"; };
+		3BBA44CD2890478D056F93E2 /* TaskRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRepository.swift; sourceTree = "<group>"; };
+		DEA41489BCC71DA7F7316AAC /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		41636AC4D30C30F21B36F6CC /* RootViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootViewModel.swift; sourceTree = "<group>"; };
+		2F60762D449D4064BEAA935E /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
+		6C85158D47356C981CD061D7 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		75DE5A4814415FC8032E736D /* GroceriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroceriesView.swift; sourceTree = "<group>"; };
+		9854E55C38D09EFA6FD1DFF7 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		6B1D315DF027F2397D0EE2EF /* MoneyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyView.swift; sourceTree = "<group>"; };
+		21DAB16C3735490C78343AEA /* QuickAddView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddView.swift; sourceTree = "<group>"; };
+		07D5A81E37DFE62D5C2AB411 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		C7F62A265B5D36CAB9F5CB8A /* TaskEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskEditor.swift; sourceTree = "<group>"; };
+		E5C744133F9DB87AB9A821C4 /* TasksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasksView.swift; sourceTree = "<group>"; };
+		43FB1784B0B861319EA7A458 /* RepeatRuleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepeatRuleTests.swift; sourceTree = "<group>"; };
+		DEFB91C1E39FC6AF5BD8DEB6 /* LifeCommandCenterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LifeCommandCenterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1A1A1A1A1A1A1A1A1A1A102 /* ModelLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/LifeCommandCenterTests/ModelLogicTests.swift; sourceTree = SOURCE_ROOT; };
+		A1A1A1A1A1A1A1A1A1A1A104 /* RepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/LifeCommandCenterTests/RepositoryTests.swift; sourceTree = SOURCE_ROOT; };
+		A1A1A1A1A1A1A1A1A1A1A106 /* NotificationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/LifeCommandCenterTests/NotificationServiceTests.swift; sourceTree = SOURCE_ROOT; };
+		A1A1A1A1A1A1A1A1A1A1A108 /* GroceryCategoryCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/LifeCommandCenterTests/GroceryCategoryCatalogTests.swift; sourceTree = SOURCE_ROOT; };
+		A1A1A1A1A1A1A1A1A1A1A10A /* PersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/LifeCommandCenterTests/PersistenceTests.swift; sourceTree = SOURCE_ROOT; };
+		B1B1B1B1B1B1B1B1B1B1B102 /* HomeManagerFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/LifeCommandCenterUITests/HomeManagerFlowTests.swift; sourceTree = SOURCE_ROOT; };
+		B1B1B1B1B1B1B1B1B1B1B103 /* LifeCommandCenterUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LifeCommandCenterUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -27,6 +81,8 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8E23EEF0F9856054A8377FB9 /* LifeCommandCenterTests Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = ( ); runOnlyForDeploymentPostprocessing = 0; };
+		B1B1B1B1B1B1B1B1B1B1B107 /* UI Test Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = ( ); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -34,20 +90,165 @@
 			isa = PBXGroup;
 			children = (
 				D10000000000000000000002 /* LifeCommandCenter */,
+				B70FA110D378490DC1164539 /* Tests */,
 				B10000000000000000000003 /* LifeCommandCenter.app */,
+				DEFB91C1E39FC6AF5BD8DEB6 /* LifeCommandCenterTests.xctest */,
+				B1B1B1B1B1B1B1B1B1B1B103 /* LifeCommandCenterUITests.xctest */,
+				B1B1B1B1B1B1B1B1B1B1B110 /* LifeCommandCenterUITests files */,
 			);
 			sourceTree = "<group>";
 		};
 		D10000000000000000000002 /* LifeCommandCenter */ = {
 			isa = PBXGroup;
 			children = (
-				B10000000000000000000001 /* LifeCommandCenterApp.swift */,
-				B10000000000000000000002 /* Views.swift */,
+				49FD95CD032EF842D70FF423 /* App */,
+				6237B273746CE0617643627C /* Components */,
+				03FE26E9D2B275B11B82B9A2 /* Models */,
+				EE2F203CDB3E2C14B8984860 /* Repositories */,
+				E8764D70B53FA9D06CBC14A9 /* Services */,
+				E9C01C75E733CBF64A489A9E /* ViewModels */,
+				E30B4F4A69D252D1867EE142 /* Views */,
 				B10000000000000000000004 /* Assets.xcassets */,
 			);
 			path = LifeCommandCenter;
 			sourceTree = "<group>";
 		};
+		49FD95CD032EF842D70FF423 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				3CBBCDEABCC38C89ECE6E93F /* LifeCommandCenterApp.swift */,
+				63D3B4426C2369E5D733759A /* RootView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		6237B273746CE0617643627C /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				AEC5984FC4FC1AB35F03B0B7 /* CommonComponents.swift */,
+				B30F83C0CD4AEB5EF067BA3E /* DesignTokens.swift */,
+				8958EE7B8055CF90A934F1A6 /* ProjectCard.swift */,
+				F16A09D440347E57B770655C /* TaskRow.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		03FE26E9D2B275B11B82B9A2 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				9DE35857FE1855A22019769B /* AppTypes.swift */,
+				36E4ACC0EF915D76CA784BC2 /* Entities.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		EE2F203CDB3E2C14B8984860 /* Repositories */ = {
+			isa = PBXGroup;
+			children = (
+				7AA07D086BDEF2755AF44EC7 /* SampleDataRepository.swift */,
+				3BBA44CD2890478D056F93E2 /* TaskRepository.swift */,
+			);
+			path = Repositories;
+			sourceTree = "<group>";
+		};
+		E8764D70B53FA9D06CBC14A9 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				DEA41489BCC71DA7F7316AAC /* NotificationService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		E9C01C75E733CBF64A489A9E /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				41636AC4D30C30F21B36F6CC /* RootViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		E30B4F4A69D252D1867EE142 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				60A5CCFED9C8AC486205EA15 /* Calendar */,
+				F5E86191F486E1CFAEAFA925 /* Dashboard */,
+				48BCFAC1F0C8FA4F8F67D012 /* Groceries */,
+				FE28A038F2721F98DC94B69A /* Home */,
+				FA9E308FD60E996263CF68C0 /* Money */,
+				268A3818E94313EA6CC9E67B /* QuickAdd */,
+				6C96838AED8151B252E1BDC2 /* Settings */,
+				493C03DF646C6E151805C1FC /* Tasks */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		60A5CCFED9C8AC486205EA15 /* Calendar */ = {
+			isa = PBXGroup;
+			children = (
+				2F60762D449D4064BEAA935E /* CalendarView.swift */,
+			);
+			path = Calendar;
+			sourceTree = "<group>";
+		};
+		F5E86191F486E1CFAEAFA925 /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				6C85158D47356C981CD061D7 /* TodayView.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		48BCFAC1F0C8FA4F8F67D012 /* Groceries */ = {
+			isa = PBXGroup;
+			children = (
+				75DE5A4814415FC8032E736D /* GroceriesView.swift */,
+			);
+			path = Groceries;
+			sourceTree = "<group>";
+		};
+		FE28A038F2721F98DC94B69A /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				9854E55C38D09EFA6FD1DFF7 /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		FA9E308FD60E996263CF68C0 /* Money */ = {
+			isa = PBXGroup;
+			children = (
+				6B1D315DF027F2397D0EE2EF /* MoneyView.swift */,
+			);
+			path = Money;
+			sourceTree = "<group>";
+		};
+		268A3818E94313EA6CC9E67B /* QuickAdd */ = {
+			isa = PBXGroup;
+			children = (
+				21DAB16C3735490C78343AEA /* QuickAddView.swift */,
+			);
+			path = QuickAdd;
+			sourceTree = "<group>";
+		};
+		6C96838AED8151B252E1BDC2 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				07D5A81E37DFE62D5C2AB411 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		493C03DF646C6E151805C1FC /* Tasks */ = {
+			isa = PBXGroup;
+			children = (
+				C7F62A265B5D36CAB9F5CB8A /* TaskEditor.swift */,
+				E5C744133F9DB87AB9A821C4 /* TasksView.swift */,
+			);
+			path = Tasks;
+			sourceTree = "<group>";
+		};
+		B70FA110D378490DC1164539 /* Tests */ = {isa = PBXGroup; children = ( 43FB1784B0B861319EA7A458 /* RepeatRuleTests.swift */, A1A1A1A1A1A1A1A1A1A1A102 /* ModelLogicTests.swift */, A1A1A1A1A1A1A1A1A1A1A104 /* RepositoryTests.swift */, A1A1A1A1A1A1A1A1A1A1A106 /* NotificationServiceTests.swift */, A1A1A1A1A1A1A1A1A1A108 /* GroceryCategoryCatalogTests.swift */, A1A1A1A1A1A1A1A1A1A1A10A /* PersistenceTests.swift */, ); path = Tests/LifeCommandCenterTests; sourceTree = "<group>"; };
+		B1B1B1B1B1B1B1B1B1B1B110 /* LifeCommandCenterUITests files */ = {isa = PBXGroup; children = ( B1B1B1B1B1B1B1B1B1B1B102 /* HomeManagerFlowTests.swift */, ); path = Tests/LifeCommandCenterUITests; sourceTree = "<group>"; };
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -68,8 +269,38 @@
 			productReference = B10000000000000000000003 /* LifeCommandCenter.app */;
 			productType = "com.apple.product-type.application";
 		};
+		B5C7CB6ECE47D22F220A8367 /* LifeCommandCenterTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AF25124F2DA07593693FA447 /* Build configuration list for PBXNativeTarget "LifeCommandCenterTests" */;
+			buildPhases = ( 0EE2406AF4B3E99C345DFE42 /* Sources */, 8E23EEF0F9856054A8377FB9 /* Frameworks */, 9A3A8B988975C6199F82726F /* Resources */, );
+			buildRules = ( );
+			dependencies = ( 1B9F3E56948DB6B412AE9A46 /* PBXTargetDependency */, );
+			name = LifeCommandCenterTests;
+			productName = LifeCommandCenterTests;
+			productReference = DEFB91C1E39FC6AF5BD8DEB6 /* LifeCommandCenterTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		B1B1B1B1B1B1B1B1B1B1B104 /* LifeCommandCenterUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1B1B1B1B1B1B1B1B1B1B105 /* Build configuration list for UI tests */;
+			buildPhases = ( B1B1B1B1B1B1B1B1B1B111 /* Sources */, B1B1B1B1B1B1B1B1B1B1B107 /* Frameworks */, B1B1B1B1B1B1B1B1B1B1B108 /* Resources */, );
+			buildRules = ( );
+			dependencies = ( B1B1B1B1B1B1B1B1B1B1B109 /* App dependency */ );
+			name = LifeCommandCenterUITests;
+			productName = LifeCommandCenterUITests;
+			productReference = B1B1B1B1B1B1B1B1B1B1B103 /* LifeCommandCenterUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
+/* Begin PBXContainerItemProxy section */
+		844BD6F383F0BEF2EA7B02BC /* Container proxy */ = {isa = PBXContainerItemProxy; containerPortal = E10000000000000000000002 /* Project object */; proxyType = 1; remoteGlobalIDString = E10000000000000000000001; remoteInfo = LifeCommandCenter; };
+		B1B1B1B1B1B1B1B1B1B1B112 /* UI test container proxy */ = {isa = PBXContainerItemProxy; containerPortal = E10000000000000000000002 /* Project object */; proxyType = 1; remoteGlobalIDString = E10000000000000000000001; remoteInfo = LifeCommandCenter; };
+/* End PBXContainerItemProxy section */
+/* Begin PBXTargetDependency section */
+		1B9F3E56948DB6B412AE9A46 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = E10000000000000000000001 /* LifeCommandCenter */; targetProxy = 844BD6F383F0BEF2EA7B02BC /* Container proxy */; };
+		B1B1B1B1B1B1B1B1B1B1B109 /* App dependency */ = {isa = PBXTargetDependency; target = E10000000000000000000001 /* LifeCommandCenter */; targetProxy = B1B1B1B1B1B1B1B1B1B1B112 /* UI test container proxy */; };
+/* End PBXTargetDependency section */
 /* Begin PBXProject section */
 		E10000000000000000000002 /* Project object */ = {
 			isa = PBXProject;
@@ -96,6 +327,8 @@
 			projectRoot = "";
 			targets = (
 				E10000000000000000000001 /* LifeCommandCenter */,
+				B5C7CB6ECE47D22F220A8367 /* LifeCommandCenterTests */,
+				B1B1B1B1B1B1B1B1B1B1B104 /* LifeCommandCenterUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -109,18 +342,41 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9A3A8B988975C6199F82726F /* LifeCommandCenterTests Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = ( ); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		C10000000000000000000002 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
-			files = (
-				A10000000000000000000001 /* LifeCommandCenterApp.swift in Sources */,
-				A10000000000000000000002 /* Views.swift in Sources */,
+						files = (
+				562485174377431E5EEAA895 /* LifeCommandCenterApp.swift in Sources */,
+				9311BDA99496156ED40972FD /* RootView.swift in Sources */,
+				D63C3F5401E87D1C99FDB615 /* CommonComponents.swift in Sources */,
+				9D01D9AC8FA71A343EA4D1E2 /* DesignTokens.swift in Sources */,
+				8E537E9C4D1125A8A787DF2D /* ProjectCard.swift in Sources */,
+				E58BAF00C59FA4C527D75286 /* TaskRow.swift in Sources */,
+				7C9F0F2A677ACC5699ACDF15 /* AppTypes.swift in Sources */,
+				D92A2209C7CF2C4942EE872F /* Entities.swift in Sources */,
+				FEF543798A41FE3CD365ECFB /* SampleDataRepository.swift in Sources */,
+				37CB5F2037B78AF9E36FCF33 /* TaskRepository.swift in Sources */,
+				F2C461DB7E7ED4CA508521BF /* NotificationService.swift in Sources */,
+				99E9D042B6CA41638A82477B /* RootViewModel.swift in Sources */,
+				AF3DC4C66EB1E44F8AE2DA7C /* CalendarView.swift in Sources */,
+				0821356BD85D75E23865AB65 /* TodayView.swift in Sources */,
+				947A36872F10BC5FCE837DD6 /* GroceriesView.swift in Sources */,
+				50F0BD77EE7980D9709BE71E /* HomeView.swift in Sources */,
+				69FC74C6DB946F8F0594A6A0 /* MoneyView.swift in Sources */,
+				26F12321EFA16CC144B46B4D /* QuickAddView.swift in Sources */,
+				CF94F38A47C3686619747558 /* SettingsView.swift in Sources */,
+				C4EDAAFEF75BED368A913CA4 /* TaskEditor.swift in Sources */,
+				88164397A7D0B36C90395319 /* TasksView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		0EE2406AF4B3E99C345DFE42 /* LifeCommandCenterTests Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ( E6EEB9BAD07B23EE865C8FBE /* RepeatRuleTests.swift in Sources */, A1A1A1A1A1A1A1A1A1A1A101 /* ModelLogicTests.swift in Sources */, A1A1A1A1A1A1A1A1A1A1A103 /* RepositoryTests.swift in Sources */, A1A1A1A1A1A1A1A1A1A1A105 /* NotificationServiceTests.swift in Sources */, A1A1A1A1A1A1A1A1A1A1A107 /* GroceryCategoryCatalogTests.swift in Sources */, A1A1A1A1A1A1A1A1A1A1A109 /* PersistenceTests.swift in Sources */, ); runOnlyForDeploymentPostprocessing = 0; };
+		B1B1B1B1B1B1B1B1B1B1B111 /* LifeCommandCenterUITests Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ( B1B1B1B1B1B1B1B1B1B1B101 /* HomeManagerFlowTests.swift in Sources */, ); runOnlyForDeploymentPostprocessing = 0; };
+		B1B1B1B1B1B1B1B1B1B1B108 /* UI Test Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = ( ); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
@@ -150,15 +406,18 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconBlue AppIconIndigo AppIconPurple AppIconPink AppIconOrange AppIconTeal";
+				ENABLE_TESTABILITY = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = J38MMLZTR4;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Daykeeper;
+				INFOPLIST_KEY_CFBundleDisplayName = "Home Manager";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.LifeCommandCenter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -175,12 +434,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconBlue AppIconIndigo AppIconPurple AppIconPink AppIconOrange AppIconTeal";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = J38MMLZTR4;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Daykeeper;
+				INFOPLIST_KEY_CFBundleDisplayName = "Home Manager";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.LifeCommandCenter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
@@ -192,6 +453,10 @@
 			};
 			name = Release;
 		};
+		FA72D1CC280539F8DC88B97D /* Debug */ = {isa = XCBuildConfiguration; buildSettings = { BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 18.0; PRODUCT_BUNDLE_IDENTIFIER = com.example.LifeCommandCenterTests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LifeCommandCenter.app/LifeCommandCenter"; }; name = Debug; };
+		821047196B758172EB6F7631 /* Release */ = {isa = XCBuildConfiguration; buildSettings = { BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 18.0; PRODUCT_BUNDLE_IDENTIFIER = com.example.LifeCommandCenterTests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LifeCommandCenter.app/LifeCommandCenter"; }; name = Release; };
+		B1B1B1B1B1B1B1B1B1B1B113 /* UI Tests Debug */ = {isa = XCBuildConfiguration; buildSettings = { GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 18.0; PRODUCT_BUNDLE_IDENTIFIER = com.example.LifeCommandCenterUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; TEST_TARGET_NAME = LifeCommandCenter; }; name = Debug; };
+		B1B1B1B1B1B1B1B1B1B1B114 /* UI Tests Release */ = {isa = XCBuildConfiguration; buildSettings = { GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 18.0; PRODUCT_BUNDLE_IDENTIFIER = com.example.LifeCommandCenterUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; TEST_TARGET_NAME = LifeCommandCenter; }; name = Release; };
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -213,6 +478,8 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		AF25124F2DA07593693FA447 /* Build configuration list for PBXNativeTarget "LifeCommandCenterTests" */ = {isa = XCConfigurationList; buildConfigurations = ( FA72D1CC280539F8DC88B97D /* Debug */, 821047196B758172EB6F7631 /* Release */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		B1B1B1B1B1B1B1B1B1B1B105 /* Build configuration list for UI tests */ = {isa = XCConfigurationList; buildConfigurations = ( B1B1B1B1B1B1B1B1B1B1B113 /* Debug */, B1B1B1B1B1B1B1B1B1B1B114 /* Release */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 /* End XCConfigurationList section */
 	};
 	rootObject = E10000000000000000000002 /* Project object */;

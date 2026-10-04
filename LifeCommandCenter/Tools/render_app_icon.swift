@@ -2,9 +2,29 @@ import AppKit
 import Foundation
 
 let size = 1024
-guard CommandLine.arguments.count == 2 else {
-    fatalError("Pass the output PNG path")
+guard CommandLine.arguments.count == 3 else {
+    fatalError("Pass the output PNG path and accent color name")
 }
+let outputPath = CommandLine.arguments[1]
+let paletteName = CommandLine.arguments[2]
+let palette: (dark: NSColor, light: NSColor, card: NSColor) = {
+    switch paletteName {
+    case "Blue":
+        (NSColor(calibratedRed: 0.06, green: 0.25, blue: 0.49, alpha: 1), NSColor(calibratedRed: 0.18, green: 0.52, blue: 0.86, alpha: 1), NSColor(calibratedRed: 0.08, green: 0.34, blue: 0.66, alpha: 1))
+    case "Indigo":
+        (NSColor(calibratedRed: 0.19, green: 0.20, blue: 0.48, alpha: 1), NSColor(calibratedRed: 0.39, green: 0.40, blue: 0.82, alpha: 1), NSColor(calibratedRed: 0.27, green: 0.27, blue: 0.62, alpha: 1))
+    case "Purple":
+        (NSColor(calibratedRed: 0.32, green: 0.16, blue: 0.45, alpha: 1), NSColor(calibratedRed: 0.61, green: 0.34, blue: 0.78, alpha: 1), NSColor(calibratedRed: 0.43, green: 0.22, blue: 0.59, alpha: 1))
+    case "Pink":
+        (NSColor(calibratedRed: 0.47, green: 0.17, blue: 0.32, alpha: 1), NSColor(calibratedRed: 0.86, green: 0.38, blue: 0.59, alpha: 1), NSColor(calibratedRed: 0.61, green: 0.23, blue: 0.42, alpha: 1))
+    case "Orange":
+        (NSColor(calibratedRed: 0.51, green: 0.23, blue: 0.08, alpha: 1), NSColor(calibratedRed: 0.94, green: 0.51, blue: 0.18, alpha: 1), NSColor(calibratedRed: 0.68, green: 0.32, blue: 0.10, alpha: 1))
+    case "Teal":
+        (NSColor(calibratedRed: 0.06, green: 0.31, blue: 0.32, alpha: 1), NSColor(calibratedRed: 0.18, green: 0.63, blue: 0.62, alpha: 1), NSColor(calibratedRed: 0.09, green: 0.43, blue: 0.43, alpha: 1))
+    default:
+        (NSColor(calibratedRed: 0.11, green: 0.24, blue: 0.20, alpha: 1), NSColor(calibratedRed: 0.30, green: 0.48, blue: 0.38, alpha: 1), NSColor(calibratedRed: 0.17, green: 0.34, blue: 0.28, alpha: 1))
+    }
+}()
 let bitmap = NSBitmapImageRep(
     bitmapDataPlanes: nil,
     pixelsWide: size,
@@ -24,8 +44,8 @@ graphics.imageInterpolation = .high
 
 let canvas = NSRect(x: 0, y: 0, width: size, height: size)
 NSGradient(colors: [
-    NSColor(calibratedRed: 0.11, green: 0.24, blue: 0.20, alpha: 1),
-    NSColor(calibratedRed: 0.30, green: 0.48, blue: 0.38, alpha: 1)
+    palette.dark,
+    palette.light
 ])!.draw(in: canvas, angle: 45)
 
 // A soft, quiet glow gives the simple mark a little depth at small sizes.
@@ -47,7 +67,7 @@ NSColor(calibratedRed: 0.98, green: 0.97, blue: 0.91, alpha: 1).setFill()
 house.fill()
 
 let card = NSBezierPath(roundedRect: NSRect(x: 334, y: 332, width: 356, height: 255), xRadius: 34, yRadius: 34)
-NSColor(calibratedRed: 0.17, green: 0.34, blue: 0.28, alpha: 1).setFill()
+palette.card.setFill()
 card.fill()
 
 let rowColor = NSColor(calibratedRed: 0.78, green: 0.85, blue: 0.77, alpha: 1)
@@ -63,7 +83,7 @@ for y: CGFloat in [520, 459, 398] {
 // Warm completion badge: a clear task cue that remains legible on the icon grid.
 let badgeRect = NSRect(x: 658, y: 236, width: 170, height: 170)
 let badge = NSBezierPath(ovalIn: badgeRect)
-NSColor(calibratedRed: 0.91, green: 0.66, blue: 0.35, alpha: 1).setFill()
+palette.light.setFill()
 badge.fill()
 let check = NSBezierPath()
 check.lineWidth = 22
@@ -78,4 +98,4 @@ check.stroke()
 graphics.flushGraphics()
 NSGraphicsContext.restoreGraphicsState()
 let png = bitmap.representation(using: .png, properties: [:])!
-try png.write(to: URL(fileURLWithPath: CommandLine.arguments[1]))
+try png.write(to: URL(fileURLWithPath: outputPath))
