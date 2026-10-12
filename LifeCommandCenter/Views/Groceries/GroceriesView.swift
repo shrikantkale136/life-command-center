@@ -439,7 +439,12 @@ struct GroceriesView: View {
                                         })
                                     }.navigationTitle("Add Grocery")
                                         .navigationBarTitleDisplayMode(.inline)
-                                }
+                                        .toolbar {
+                                            ToolbarItem(placement: .cancellationAction) {
+                                                FormCancelButton()
+                                            }.formIconBackground()
+                                        }
+                                }.formDiscardProtection()
                             }
                     }
                 }
@@ -794,7 +799,7 @@ struct GroceryCreateFields: View {
                         done()
                     }.buttonStyle(SaveButtonStyle()).disabled(
                         name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
+                }.formIconBackground()
             }
             Picker("Category", selection: $category) {
                 ForEach(categories, id: \.self) { Text($0) }
@@ -853,8 +858,8 @@ private struct GroceryCatalogItemEditor: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
+                    FormCancelButton()
+                }.formIconBackground()
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
                         item.name = cleanedName
@@ -862,10 +867,10 @@ private struct GroceryCatalogItemEditor: View {
                         dismiss()
                     }.buttonStyle(SaveButtonStyle())
                         .disabled(cleanedName.isEmpty || duplicateName)
-                }
+                }.formIconBackground()
             }
-        }
-        .presentationDetents([.medium])
+        }.formDiscardProtection(tracking: [name, category])
+            .presentationDetents([.medium])
     }
 }
 
@@ -923,18 +928,18 @@ private struct AddGroceryCategoryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
+                    FormCancelButton()
+                }.formIconBackground()
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(title == "New Category" ? "Save" : "Save Changes") {
                         onSave(cleanedName)
                         dismiss()
                     }.buttonStyle(SaveButtonStyle())
                         .disabled(cleanedName.isEmpty || alreadyExists)
-                }
+                }.formIconBackground()
             }
-        }
-        .presentationDetents([.medium])
+        }.formDiscardProtection(tracking: name)
+            .presentationDetents([.medium])
     }
 }
 

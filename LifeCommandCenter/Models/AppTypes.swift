@@ -148,3 +148,24 @@ enum MaintenanceFrequency: String, CaseIterable, Identifiable {
     }
 
 }
+
+/// Expands a saved series without inserting duplicate model objects.
+enum ScheduleRecurrence {
+    static func occurrences(from start: Date, frequency: String, in interval: DateInterval) -> [Date] {
+        let normalized: String
+        switch frequency {
+        case "Annual": normalized = "Yearly"
+        case "Semi-Annual": normalized = "Semiannual"
+        default: normalized = frequency
+        }
+        let rule = MaintenanceFrequency(rawValue: normalized) ?? .none
+        var result: [Date] = []
+        var date = start
+        while date < interval.end {
+            if date >= interval.start { result.append(date) }
+            guard let next = rule.next(after: date), next > date else { break }
+            date = next
+        }
+        return result
+    }
+}

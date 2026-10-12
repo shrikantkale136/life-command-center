@@ -4,6 +4,45 @@ import SwiftUI
 @testable import LifeCommandCenter
 
 final class ModelLogicTests: XCTestCase {
+    func testProjectProgressIncludesPurchasedShoppingItems() {
+        let project = HomeProject(name: "Shelves")
+        let task = ProjectTask(title: "Install", project: project)
+        let purchase = ProjectShoppingItem(name: "Brackets", quantity: 4, project: project)
+        project.tasks = [task]
+        project.shoppingItems = [purchase]
+        XCTAssertEqual(project.totalItemCount, 2)
+        task.isComplete = true
+        XCTAssertEqual(project.progress, 0.5)
+        purchase.isPurchased = true
+        XCTAssertEqual(project.completedItemCount, 2)
+        XCTAssertEqual(project.progress, 1)
+        project.tasks = []
+        purchase.isPurchased = false
+        XCTAssertEqual(project.progress, 0)
+        purchase.isPurchased = true
+        XCTAssertEqual(project.progress, 1)
+    }
+
+    func testCalendarExpandsTaskBillAndSubscriptionRecurrence() {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: Date())
+        let end = calendar.date(byAdding: .day, value: 15, to: start)!
+        let task = TaskItem(title: "Daily", dueDate: start, repeatRule: .daily)
+        let bill = BillItem(name: "Weekly", dueDate: start, frequency: "Weekly")
+        let subscription = SubscriptionItem(name: "Renewal", frequency: "Weekly", nextDate: start)
+        let records = CalendarRecord.records(tasks: [task], bills: [bill], subscriptions: [subscription], maintenance: [], projects: [], in: DateInterval(start: start, end: end))
+        XCTAssertEqual(records.filter { $0.title == "Daily" }.count, 15)
+        XCTAssertEqual(records.filter { $0.title == "Weekly" }.count, 3)
+        XCTAssertEqual(records.filter { $0.title == "Renewal" }.count, 3)
+        XCTAssertEqual(Set(records.map(\.id)).count, records.count)
+        let tasks = records.filter { $0.title == "Daily" }
+        tasks[0].toggleChecklistCompletion()
+        XCTAssertTrue(tasks[0].isComplete)
+        XCTAssertFalse(tasks[1].isComplete)
+        subscription.isActive = false
+        XCTAssertTrue(CalendarRecord.records(tasks: [], bills: [], subscriptions: [subscription], maintenance: [], projects: [], in: DateInterval(start: start, end: end)).isEmpty)
+    }
+
     func testMaintenanceWeekdayWeekendAndHourlyRules() {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0)!
@@ -250,7 +289,7 @@ final class ModelLogicTests: XCTestCase {
         XCTAssertEqual(project.shoppingEstimate, 37.5)
         item.isPurchased = true
         XCTAssertEqual(project.shoppingEstimate, 37.5)
-        XCTAssertEqual(project.progress, 0)
+        XCTAssertEqual(project.progress, 1)
         var draft = ProjectDraft(project: project)
         XCTAssertTrue(draft.canSave)
         draft.estimatedCost = "-10"

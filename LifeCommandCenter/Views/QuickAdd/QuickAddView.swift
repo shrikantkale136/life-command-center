@@ -36,12 +36,13 @@ struct QuickAddView: View {
                         }
                     }
                 }
-            }.navigationTitle("Quick add").navigationBarTitleDisplayMode(
+            }
+            .navigationTitle("Quick add").navigationBarTitleDisplayMode(
                 .inline
             ).toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Close") { dismiss() }
-                }
+                    FormCancelButton(label: "Close")
+                }.formIconBackground()
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
                     Button("Done") {
@@ -51,7 +52,7 @@ struct QuickAddView: View {
                     }
                 }
             }
-        }
+        }.formDiscardProtection()
     }
 }
 
@@ -93,7 +94,7 @@ struct TaskCreateFields: View {
                         done()
                     }.buttonStyle(SaveButtonStyle()).disabled(
                         title.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
+                }.formIconBackground()
             }
             DatePicker(
                 "Due",

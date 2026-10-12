@@ -60,7 +60,7 @@ struct CalendarView: View {
     }
 
     var body: some View {
-        ScrollView {
+        List {
             VStack(spacing: 18) {
                 HStack {
                     Button {
@@ -151,61 +151,50 @@ struct CalendarView: View {
                 .padding(14)
                 .cardStyle()
 
-                VStack(alignment: .leading, spacing: 12) {
-                    SectionHeading(
-                        title: selected.formatted(
-                            .dateTime.weekday(.wide).month(.wide).day()
-                        ),
-                        subtitle: "Scheduled items"
-                    )
-                    if selectedEvents.isEmpty {
-                        Text("Nothing scheduled for this date.").font(
-                            .subheadline
-                        ).foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(16).cardStyle()
-                    } else {
-                        VStack(spacing: 0) {
-                            ForEach(selectedEvents) { event in
-                                Button {
-                                    edit(event)
-                                } label: {
-                                    Label(
-                                        event.displayTitle,
-                                        systemImage: event.symbol
-                                    )
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(event.color)
-                                    .frame(
-                                        maxWidth: .infinity,
-                                        alignment: .leading
-                                    )
-                                    .padding(14)
-                                    .contentShape(Rectangle())
-                                }
-                                .buttonStyle(.plain)
-                                .contextMenu {
-                                    Button("Edit event", systemImage: "pencil") { edit(event) }
-                                    Button(
-                                        "Delete event",
-                                        systemImage: "trash",
-                                        role: .destructive
-                                    ) {
-                                        recordToDelete = event
-                                        showingDeleteConfirmation = true
-                                    }
-                                }
-                                if event.id != selectedEvents.last?.id {
-                                    Divider().padding(.leading, 48)
-                                }
+            }
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
+            Section {
+                if selectedEvents.isEmpty {
+                    Text("Nothing scheduled for this date.")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                } else {
+                    ForEach(selectedEvents) { event in
+                        HStack(spacing: 12) {
+                            Label(event.displayTitle, systemImage: event.symbol)
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(event.color)
+                            Spacer(minLength: 8)
+                            Button { edit(event) } label: {
+                                Image(systemName: "pencil")
+                                    .frame(width: 32, height: 32)
                             }
-                        }.cardStyle()
+                            .buttonStyle(.borderless)
+                            .accessibilityLabel("Edit \(event.title)")
+                            .accessibilityIdentifier("calendar-edit-\(event.title)")
+                        }
+                        .listRowInsets(EdgeInsets(top: 4, leading: 14, bottom: 4, trailing: 10))
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button {
+                                recordToDelete = event
+                                showingDeleteConfirmation = true
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                                    .labelStyle(.titleAndIcon)
+                            }
+                            .tint(.red)
+                        }
                     }
                 }
+            } header: {
+                SectionHeading(
+                    title: selected.formatted(.dateTime.weekday(.wide).month(.wide).day()),
+                    subtitle: "Scheduled items")
+                    .textCase(nil)
             }
-            .padding(20)
-            .padding(.bottom, 30)
         }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
         .background(canvas)
         .navigationTitle("Calendar")
         .navigationBarTitleDisplayMode(.inline)
@@ -220,23 +209,25 @@ struct CalendarView: View {
         }
         .alert("Delete event?", isPresented: $showingDeleteConfirmation) {
             Button("Delete", role: .destructive) {
-                recordToDelete?.delete(from: context)
-                try? context.save()
-                if !ProcessInfo.processInfo.arguments.contains("-ui-testing") {
-                    NotificationService.syncMaintenance(in: context)
-                }
+                if let recordToDelete { delete(recordToDelete) }
                 recordToDelete = nil
             }
             Button("Cancel", role: .cancel) { recordToDelete = nil }
         } message: {
-            Text(
-                "\(recordToDelete?.displayTitle ?? "This event") will be permanently deleted."
-            )
+            Text("\(recordToDelete?.displayTitle ?? "This event") will be permanently deleted.")
+        }
+    }
+
+    private func delete(_ record: CalendarRecord) {
+        withAnimation { record.delete(from: context) }
+        try? context.save()
+        if !ProcessInfo.processInfo.arguments.contains("-ui-testing") {
+            NotificationService.syncMaintenance(in: context)
         }
     }
 
     private func edit(_ record: CalendarRecord) {
-        if case .task(let task) = record {
+        if case .task(let task, _) = record {
             editTask(task)
         } else {
             recordBeingEdited = record
@@ -269,9 +260,9 @@ struct CalendarView: View {
 }
 
 enum CalendarRecord: Identifiable {
-    case task(TaskItem)
-    case bill(BillItem)
-    case subscription(SubscriptionItem)
+    case task(TaskItem, Date? = nil)
+    case bill(BillItem, Date? = nil)
+    case subscription(SubscriptionItem, Date? = nil)
     case maintenance(HomeMaintenance, Date)
     case project(HomeProject)
 
@@ -280,10 +271,14 @@ enum CalendarRecord: Identifiable {
         maintenance: [HomeMaintenance], projects: [HomeProject], in interval: DateInterval
     ) -> [CalendarRecord] {
         func includes(_ date: Date) -> Bool { date >= interval.start && date < interval.end }
-        let taskRecords = tasks.filter { includes($0.dueDate) }.map { CalendarRecord.task($0) }
-        let billRecords = bills.filter { includes($0.dueDate) }.map { CalendarRecord.bill($0) }
-        let subscriptionRecords = subscriptions.filter { includes($0.nextDate) }.map {
-            CalendarRecord.subscription($0)
+        let taskRecords = tasks.flatMap { item in
+            ScheduleRecurrence.occurrences(from: item.dueDate, frequency: item.isComplete ? "Never" : item.repeatRaw, in: interval).map { CalendarRecord.task(item, $0) }
+        }
+        let billRecords = bills.flatMap { item in
+            ScheduleRecurrence.occurrences(from: item.dueDate, frequency: item.frequencyRaw, in: interval).map { CalendarRecord.bill(item, $0) }
+        }
+        let subscriptionRecords = subscriptions.filter { $0.isActive }.flatMap { item in
+            ScheduleRecurrence.occurrences(from: item.nextDate, frequency: item.frequencyRaw, in: interval).map { CalendarRecord.subscription(item, $0) }
         }
         let maintenanceRecords = maintenance.flatMap { item in
             item.occurrences(in: interval).map { CalendarRecord.maintenance(item, $0) }
@@ -298,10 +293,10 @@ enum CalendarRecord: Identifiable {
 
     var id: String {
         switch self {
-        case .task(let item): "task-\(item.persistentModelID.hashValue)"
-        case .bill(let item): "bill-\(item.persistentModelID.hashValue)"
-        case .subscription(let item):
-            "subscription-\(item.persistentModelID.hashValue)"
+        case .task(let item, _): "task-\(item.persistentModelID.hashValue)-\(date.timeIntervalSince1970)"
+        case .bill(let item, _): "bill-\(item.persistentModelID.hashValue)-\(date.timeIntervalSince1970)"
+        case .subscription(let item, _):
+            "subscription-\(item.persistentModelID.hashValue)-\(date.timeIntervalSince1970)"
         case .maintenance(let item, _):
             "maintenance-\(item.persistentModelID.hashValue)-\(date.timeIntervalSince1970)"
         case .project(let item): "project-\(item.persistentModelID.hashValue)"
@@ -310,7 +305,7 @@ enum CalendarRecord: Identifiable {
 
     var checklistCategory: String {
         switch self {
-        case .task(let item): item.category
+        case .task(let item, _): item.category
         case .bill: "Bill"
         case .subscription: "Subscription"
         case .maintenance: "Maintenance"
@@ -319,15 +314,15 @@ enum CalendarRecord: Identifiable {
     }
     private var completedDates: [Date] {
         switch self {
-        case .task: []
-        case .bill(let item): item.completedScheduleDates
-        case .subscription(let item): item.completedScheduleDates
+        case .task(let item, _): item.completedScheduleDates
+        case .bill(let item, _): item.completedScheduleDates
+        case .subscription(let item, _): item.completedScheduleDates
         case .maintenance(let item, _): item.completedScheduleDates
         case .project(let item): item.completedScheduleDates
         }
     }
     var isComplete: Bool {
-        if case .task(let item) = self { return item.isComplete }
+        if case .task(let item, _) = self, item.repeatRule == .none || item.isComplete { return item.isComplete }
         return completedDates.contains(date)
     }
     func toggleChecklistCompletion() {
@@ -338,9 +333,9 @@ enum CalendarRecord: Identifiable {
             dates.append(date)
         }
         switch self {
-        case .task: break  // TaskRepository handles task recurrence and notifications.
-        case .bill(let item): item.completedScheduleDates = dates
-        case .subscription(let item): item.completedScheduleDates = dates
+        case .task(let item, _): item.completedScheduleDates = dates
+        case .bill(let item, _): item.completedScheduleDates = dates
+        case .subscription(let item, _): item.completedScheduleDates = dates
         case .maintenance(let item, _): item.completedScheduleDates = dates
         case .project(let item): item.completedScheduleDates = dates
         }
@@ -348,9 +343,9 @@ enum CalendarRecord: Identifiable {
 
     var displayTitle: String {
         switch self {
-        case .task(let item): item.title
-        case .bill(let item): "\(item.name) · \(item.amount.currency)"
-        case .subscription(let item): "\(item.name) renewal"
+        case .task(let item, _): item.title
+        case .bill(let item, _): "\(item.name) · \(item.amount.currency)"
+        case .subscription(let item, _): "\(item.name) renewal"
         case .maintenance(let item, _): item.name
         case .project(let item): "\(item.name) deadline"
         }
@@ -376,9 +371,9 @@ enum CalendarRecord: Identifiable {
 
     var title: String {
         switch self {
-        case .task(let item): item.title
-        case .bill(let item): item.name
-        case .subscription(let item): item.name
+        case .task(let item, _): item.title
+        case .bill(let item, _): item.name
+        case .subscription(let item, _): item.name
         case .maintenance(let item, _): item.name
         case .project(let item): item.name
         }
@@ -386,9 +381,9 @@ enum CalendarRecord: Identifiable {
 
     var date: Date {
         switch self {
-        case .task(let item): item.dueDate
-        case .bill(let item): item.dueDate
-        case .subscription(let item): item.nextDate
+        case .task(let item, let occurrence): occurrence ?? item.dueDate
+        case .bill(let item, let occurrence): occurrence ?? item.dueDate
+        case .subscription(let item, let occurrence): occurrence ?? item.nextDate
         case .maintenance(_, let occurrence): occurrence
         case .project(let item): item.targetDate
         }
@@ -396,13 +391,13 @@ enum CalendarRecord: Identifiable {
 
     func update(title: String, date: Date) {
         switch self {
-        case .task(let item):
+        case .task(let item, _):
             item.title = title
             item.dueDate = date
-        case .bill(let item):
+        case .bill(let item, _):
             item.name = title
             item.dueDate = date
-        case .subscription(let item):
+        case .subscription(let item, _):
             item.name = title
             item.nextDate = date
         case .maintenance(let item, _):
@@ -416,13 +411,13 @@ enum CalendarRecord: Identifiable {
 
     func delete(from context: ModelContext) {
         switch self {
-        case .task(let item):
+        case .task(let item, _):
             NotificationService.cancel(
                 id: item.persistentModelID.hashValue.description
             )
             context.delete(item)
-        case .bill(let item): context.delete(item)
-        case .subscription(let item): context.delete(item)
+        case .bill(let item, _): context.delete(item)
+        case .subscription(let item, _): context.delete(item)
         case .maintenance(let item, _): context.delete(item)
         case .project(let item): context.delete(item)
         }
@@ -458,8 +453,8 @@ private struct CalendarRecordEditor: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
+                    FormCancelButton()
+                }.formIconBackground()
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
                         record.update(
@@ -478,9 +473,9 @@ private struct CalendarRecordEditor: View {
                             title.trimmingCharacters(in: .whitespacesAndNewlines)
                                 .isEmpty
                         )
-                }
+                }.formIconBackground()
             }
-        }
-        .presentationDetents([.medium])
+        }.formDiscardProtection(tracking: [AnyHashable(title), AnyHashable(date)])
+            .presentationDetents([.medium])
     }
 }

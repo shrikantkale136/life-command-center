@@ -4,7 +4,7 @@ import SwiftUI
 import UIKit
 import UserNotifications
 
-private struct TaskDraft {
+private struct TaskDraft: Equatable {
     var title: String
     var detail: String
     var dueDate: Date
@@ -68,13 +68,14 @@ struct TaskEditor: View {
             .navigationTitle("Edit task")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { FormCancelButton() }
+                    .formIconBackground()
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save", action: save).buttonStyle(SaveButtonStyle())
                         .fontWeight(.semibold)
                         .disabled(
                             draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
+                }.formIconBackground()
             }
             .confirmationDialog(
                 "Delete this task?", isPresented: $showingDeleteConfirmation,
@@ -87,7 +88,7 @@ struct TaskEditor: View {
                 }
                 Button("Cancel", role: .cancel) {}
             }
-        }
+        }.formDiscardProtection(tracking: draft)
     }
 
     private func save() {

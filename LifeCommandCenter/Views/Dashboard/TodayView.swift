@@ -55,7 +55,7 @@ struct TodayView: View {
     private var todayItems: [CalendarRecord] { items(for: selectedDay) }
     private func dayList(for offset: Int) -> some View {
         let entries = items(for: offset)
-        return ScrollView(.vertical) {
+        return Group {
             if entries.isEmpty {
                 if selectedCategory == "All" {
                     EmptyCard(
@@ -88,7 +88,9 @@ struct TodayView: View {
                                 Spacer()
                             }.frame(minHeight: 68).accessibilityIdentifier(
                                 "schedule-preview-\(offset)-\(event.title)")
-                        } else if case .task(let task) = event {
+                        } else if case .task(let task, _) = event,
+                            task.repeatRule == .none || task.isComplete
+                        {
                             TaskRow(task: task, toggle: { toggle(task) }, edit: { edit(task) })
                         } else {
                             Button {
@@ -103,6 +105,11 @@ struct TodayView: View {
                             }.buttonStyle(.plain).opacity(event.isComplete ? 0.5 : 1)
                                 .accessibilityIdentifier("schedule-checklist-\(event.title)")
                                 .accessibilityValue(event.isComplete ? "Completed" : "Incomplete")
+                                .contextMenu {
+                                    if case .task(let task, _) = event {
+                                        Button("Edit", systemImage: "pencil") { edit(task) }
+                                    }
+                                }
                         }
                         if event.id != entries.last?.id {
                             Divider().padding(.leading, 48)
@@ -110,131 +117,143 @@ struct TodayView: View {
                     }
                 }.padding(.horizontal, 14)
             }
-        }.scrollIndicators(.visible).cardStyle().accessibilityIdentifier("schedule-list")
+        }.cardStyle().accessibilityIdentifier("schedule-list")
     }
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 24) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(greeting).font(.subheadline.weight(.semibold)).foregroundStyle(forest)
-                    Text("Your day, in focus.").font(.largeTitle.weight(.bold)).fontDesign(
-                        .rounded)
-                    Text(Date.now.formatted(.dateTime.weekday(.wide).month(.wide).day()))
-                        .foregroundStyle(
-                            .secondary)
-                }.frame(maxWidth: .infinity, alignment: .leading).padding(.top, 10)
+            ScrollView(.vertical) {
+                LazyVStack(alignment: .leading, spacing: 24, pinnedViews: [.sectionHeaders]) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(greeting).font(.subheadline.weight(.semibold)).foregroundStyle(forest)
+                        Text("Your day, in focus.").font(.largeTitle.weight(.bold)).fontDesign(
+                            .rounded)
+                        Text(Date.now.formatted(.dateTime.weekday(.wide).month(.wide).day()))
+                            .foregroundStyle(
+                                .secondary)
+                    }.frame(maxWidth: .infinity, alignment: .leading).padding(.top, 10)
 
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack(alignment: .center) {
-                        SectionHeading(
-                            title: dayTitle,
-                            subtitle:
-                                selectedDay == 0
-                                ? "\(todayItems.count - completedTaskCount) remaining"
-                                : "\(todayItems.count) scheduled")
-                        Spacer()
-                        Menu {
-                            ForEach(taskCategories, id: \.self) { option in
-                                Button {
-                                    selectedCategory = option
-                                } label: {
-                                    if selectedCategory == option {
-                                        Label(option, systemImage: "checkmark")
-                                    } else {
-                                        Text(option)
+                    VStack(alignment: .leading, spacing: 14) {
+                        HStack(alignment: .center) {
+                            SectionHeading(
+                                title: dayTitle,
+                                subtitle:
+                                    selectedDay == 0
+                                    ? "\(todayItems.count - completedTaskCount) remaining"
+                                    : "\(todayItems.count) scheduled")
+                            Spacer()
+                            Menu {
+                                ForEach(taskCategories, id: \.self) { option in
+                                    Button {
+                                        selectedCategory = option
+                                    } label: {
+                                        if selectedCategory == option {
+                                            Label(option, systemImage: "checkmark")
+                                        } else {
+                                            Text(option)
+                                        }
                                     }
                                 }
-                            }
-                        } label: {
-                            Image(
-                                systemName: selectedCategory == "All"
-                                    ? "line.3.horizontal.decrease.circle"
-                                    : "line.3.horizontal.decrease.circle.fill"
-                            )
-                            .font(.title3).foregroundStyle(forest).frame(width: 36, height: 36)
-                            .contentShape(Circle())
-                        }
-                        .accessibilityLabel("Filter today's tasks by category")
-                        if selectedDay == 0 {
-                            Text("\(completedTaskCount) / \(todayItems.count)")
-                                .font(.subheadline.weight(.semibold).monospacedDigit())
-                                .foregroundStyle(.secondary)
-                                .accessibilityLabel(
-                                    "\(completedTaskCount) of \(todayItems.count) tasks completed"
-                                )
-                        }
-                    }
-
-                    if selectedDay == 0 {
-                        HStack(spacing: 10) {
-                            ProgressView(value: completionProgress)
-                                .tint(forest)
-                            Text("\(completionPercentage)%")
-                                .font(.caption.weight(.semibold).monospacedDigit())
-                                .foregroundStyle(.secondary)
-                                .frame(minWidth: 38, alignment: .trailing)
-                        }
-
-                    }
-
-                    HStack(spacing: 12) {
-                        ForEach(0..<3) { offset in
-                            Button {
-                                withAnimation(.snappy) { selectedDay = offset }
                             } label: {
-                                Text(["Today", "Tomorrow", "This week"][offset])
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(selectedDay == offset ? .white : forest)
-                                    .frame(maxWidth: .infinity).padding(.vertical, 8)
-                                    .background(
-                                        selectedDay == offset ? forest : forest.opacity(0.1),
-                                        in: Capsule())
-                            }.buttonStyle(.plain).accessibilityIdentifier("task-day-\(offset)")
-                        }
-                    }
-                    ZStack {
-                        dayList(for: selectedDay)
-                            .id(selectedDay)
-                            .transition(.opacity.combined(with: .move(edge: .trailing)))
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.primary.opacity(0.001))
-                    .clipped()
-                    .contentShape(Rectangle())
-                    .simultaneousGesture(
-                        DragGesture(minimumDistance: 20).onEnded { value in
-                            guard abs(value.translation.width) > 60,
-                                abs(value.translation.width) > abs(value.translation.height)
-                            else { return }
-                            withAnimation(.snappy) {
-                                selectedDay = min(
-                                    2, max(0, selectedDay + (value.translation.width < 0 ? 1 : -1)))
+                                Image(
+                                    systemName: selectedCategory == "All"
+                                        ? "line.3.horizontal.decrease.circle"
+                                        : "line.3.horizontal.decrease.circle.fill"
+                                )
+                                .font(.title3).foregroundStyle(forest).frame(width: 36, height: 36)
+                                .contentShape(Circle())
+                            }
+                            .accessibilityLabel("Filter today's tasks by category")
+                            if selectedDay == 0 {
+                                Text("\(completedTaskCount) / \(todayItems.count)")
+                                    .font(.subheadline.weight(.semibold).monospacedDigit())
+                                    .foregroundStyle(.secondary)
+                                    .accessibilityLabel(
+                                        "\(completedTaskCount) of \(todayItems.count) tasks completed"
+                                    )
                             }
                         }
-                    )
-                    .accessibilityIdentifier("daily-task-pages")
-                }
-                .onChange(of: selectedDay) { _, _ in selectedCategory = "All" }
-            }.padding(.horizontal, 20).padding(.bottom, 16)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                .background(canvas).navigationTitle("Today").navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        NavigationLink {
-                            CalendarView(addEvent: add, editTask: edit)
-                        } label: {
-                            Image(systemName: "calendar")
-                                .foregroundStyle(forest)
+
+                        if selectedDay == 0 {
+                            HStack(spacing: 10) {
+                                ProgressView(value: completionProgress)
+                                    .tint(forest)
+                                Text("\(completionPercentage)%")
+                                    .font(.caption.weight(.semibold).monospacedDigit())
+                                    .foregroundStyle(.secondary)
+                                    .frame(minWidth: 38, alignment: .trailing)
+                            }
+
                         }
-                        .accessibilityLabel("Calendar")
+
                     }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(action: add) {
-                            Image(systemName: "plus").foregroundStyle(forest)
+                    Section {
+                        ZStack {
+                            dayList(for: selectedDay)
+                                .id(selectedDay)
+                                .transition(.opacity.combined(with: .move(edge: .trailing)))
                         }
-                        .accessibilityLabel("Quick add")
+                        .frame(maxWidth: .infinity)
+                        .background(Color.primary.opacity(0.001))
+                        .clipped()
+                        .contentShape(Rectangle())
+                        .accessibilityIdentifier("daily-task-pages")
+                    } header: {
+                        HStack(spacing: 12) {
+                            ForEach(0..<3) { offset in
+                                Button {
+                                    withAnimation(.snappy) { selectedDay = offset }
+                                } label: {
+                                    Text(["Today", "Tomorrow", "This week"][offset])
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundStyle(selectedDay == offset ? .white : forest)
+                                        .frame(maxWidth: .infinity).padding(.vertical, 8)
+                                        .background(
+                                            selectedDay == offset ? forest : forest.opacity(0.1),
+                                            in: Capsule())
+                                }.buttonStyle(.plain).accessibilityIdentifier("task-day-\(offset)")
+                            }
+                        }
+                        .padding(.vertical, 10)
+                        .background(canvas)
+                    }
+                }.padding(.horizontal, 20).padding(.bottom, 16)
+            }
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 20, coordinateSpace: .global).onEnded { value in
+                    let width = UIScreen.main.bounds.width
+                    guard value.startLocation.x >= 24, value.startLocation.x <= width - 24
+                    else { return }
+                    guard abs(value.translation.width) > 60,
+                        abs(value.translation.width) > abs(value.translation.height)
+                    else { return }
+                    withAnimation(.snappy) {
+                        selectedDay = min(
+                            2,
+                            max(0, selectedDay + (value.translation.width < 0 ? 1 : -1))
+                        )
                     }
                 }
+            )
+            .accessibilityIdentifier("today-page-scroll")
+            .onChange(of: selectedDay) { _, _ in selectedCategory = "All" }
+            .background(canvas).navigationTitle("Today").navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    NavigationLink {
+                        CalendarView(addEvent: add, editTask: edit)
+                    } label: {
+                        Image(systemName: "calendar")
+                            .foregroundStyle(forest)
+                    }
+                    .accessibilityLabel("Calendar")
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: add) {
+                        Image(systemName: "plus").foregroundStyle(forest)
+                    }
+                    .accessibilityLabel("Quick add")
+                }
+            }
         }
     }
     private var greeting: String {

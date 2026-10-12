@@ -102,6 +102,7 @@ struct HomeView: View {
                                             .foregroundStyle(.secondary)
                                     }.padding(14).contentShape(Rectangle())
                                 }.buttonStyle(.plain)
+                                    .accessibilityIdentifier("maintenance-row-\(item.name)")
                                     .contextMenu {
                                         Button("Edit maintenance", systemImage: "square.and.pencil")
                                         { editMaintenance(item) }
@@ -236,7 +237,7 @@ private struct ProjectStatusSection: View {
     }
 }
 
-struct MaintenanceDraft {
+struct MaintenanceDraft: Equatable {
     var name: String
     var area: String
     var detail: String
@@ -346,22 +347,103 @@ struct MaintenanceDraft {
     }
 }
 
+// Observe taps alongside native menu controls without consuming their touches.
+@MainActor
+private final class ReminderPickerTouchMonitor: NSObject, UIGestureRecognizerDelegate {
+    private final class WeakView {
+        weak var view: UIView?
+        init(_ view: UIView) { self.view = view }
+    }
+    private var anchors: [WeakView] = []
+    private weak var window: UIWindow?
+    private var recognizer: UITapGestureRecognizer?
+    var onOutsideTap: () -> Void = {}
+
+    func register(_ view: UIView) {
+        anchors.removeAll { $0.view == nil }
+        if !anchors.contains(where: { $0.view === view }) { anchors.append(WeakView(view)) }
+        guard let window = view.window, self.window !== window else { return }
+        if let recognizer { self.window?.removeGestureRecognizer(recognizer) }
+        let recognizer = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
+        recognizer.cancelsTouchesInView = false
+        recognizer.delegate = self
+        window.addGestureRecognizer(recognizer)
+        self.window = window
+        self.recognizer = recognizer
+    }
+
+    @objc private func tapped(_ recognizer: UITapGestureRecognizer) {
+        onOutsideTap()
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch)
+        -> Bool
+    {
+        guard let window else { return false }
+        let point = touch.location(in: window)
+        return !anchors.contains { anchor in
+            guard let view = anchor.view, view.window === window else { return false }
+            return view.convert(view.bounds, to: window).contains(point)
+        }
+    }
+
+    func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+    ) -> Bool {
+        true
+    }
+
+    deinit {
+        if let recognizer {
+            let observedWindow = window
+            DispatchQueue.main.async { [weak observedWindow] in
+                observedWindow?.removeGestureRecognizer(recognizer)
+            }
+        }
+    }
+}
+
+private struct ReminderPickerTouchAnchor: UIViewRepresentable {
+    let monitor: ReminderPickerTouchMonitor
+
+    final class AnchorView: UIView {
+        weak var monitor: ReminderPickerTouchMonitor?
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            monitor?.register(self)
+        }
+    }
+
+    func makeUIView(context: Context) -> AnchorView {
+        let view = AnchorView()
+        view.isUserInteractionEnabled = false
+        view.monitor = monitor
+        return view
+    }
+
+    func updateUIView(_ view: AnchorView, context: Context) { monitor.register(view) }
+}
+
 private struct MaintenanceFormSections: View {
     @Binding var draft: MaintenanceDraft
     var lastCompleted: Date? = nil
     var createSaveButton: AnyView? = nil
     @State private var focusedPicker: PickerFocus?
+    @State private var touchMonitor = ReminderPickerTouchMonitor()
     @FocusState private var editingText: Bool
     private enum PickerFocus { case date, time }
 
     var body: some View {
         Section("Maintenance details") {
             TextField("Maintenance item", text: $draft.name).focused($editingText)
-                .toolbar { ToolbarItem(placement: .topBarTrailing) { createSaveButton } }
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) { createSaveButton }
+                        .formIconBackground()
+                }
             TextField("Area", text: $draft.area).focused($editingText)
             TextField("Description", text: $draft.detail, axis: .vertical).focused($editingText)
         }
-        .simultaneousGesture(TapGesture().onEnded { focusedPicker = nil })
         Section("Date & Time") {
             HStack {
                 Button {
@@ -396,10 +478,12 @@ private struct MaintenanceFormSections: View {
                         })
                 ).labelsHidden().accessibilityIdentifier("maintenance-date-toggle")
             }
+            .background(ReminderPickerTouchAnchor(monitor: touchMonitor))
             if draft.dateEnabled && focusedPicker == .date {
                 DatePicker("Due date", selection: $draft.nextDue, displayedComponents: .date)
                     .datePickerStyle(.graphical).labelsHidden()
                     .accessibilityIdentifier("maintenance-date-picker")
+                    .background(ReminderPickerTouchAnchor(monitor: touchMonitor))
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
             HStack {
@@ -438,15 +522,20 @@ private struct MaintenanceFormSections: View {
                         })
                 ).labelsHidden().accessibilityIdentifier("maintenance-time-toggle")
             }
+            .background(ReminderPickerTouchAnchor(monitor: touchMonitor))
             if draft.timeEnabled && focusedPicker == .time {
                 DatePicker(
                     "Time", selection: $draft.reminderTime, displayedComponents: .hourAndMinute
                 )
                 .datePickerStyle(.wheel).labelsHidden().frame(height: 170).clipped()
                 .accessibilityIdentifier("maintenance-time-picker")
+                .background(ReminderPickerTouchAnchor(monitor: touchMonitor))
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
 
+        }
+        .onAppear {
+            touchMonitor.onOutsideTap = { [picker = $focusedPicker] in picker.wrappedValue = nil }
         }
         .onChange(of: editingText) { _, editing in
             if editing { focusedPicker = nil }
@@ -459,6 +548,7 @@ private struct MaintenanceFormSections: View {
             Picker("Repeat", selection: $draft.frequency) {
                 ForEach(MaintenanceFrequency.allCases) { Text($0.title).tag($0) }
             }.accessibilityIdentifier("maintenance-repeat-picker")
+
             if draft.frequency == .custom {
                 HStack {
                     Text("Every")
@@ -468,6 +558,7 @@ private struct MaintenanceFormSections: View {
                         format: .number.grouping(.never)
                     )
                     .keyboardType(.numberPad).multilineTextAlignment(.trailing).frame(width: 70)
+                    .focused($editingText)
                 }
                 Picker("Interval unit", selection: $draft.customUnit) {
                     ForEach(MaintenanceIntervalUnit.allCases) { Text($0.rawValue).tag($0) }
@@ -478,16 +569,18 @@ private struct MaintenanceFormSections: View {
                     Text("Never").tag(false)
                     Text("On date").tag(true)
                 }.accessibilityIdentifier("maintenance-end-repeat-picker")
+
                 if draft.endsRepeat {
                     DatePicker(
                         "End date", selection: $draft.repeatEndDate,
                         in: draft.calendar.startOfDay(for: draft.nextDue)...,
-                        displayedComponents: .date)
+                        displayedComponents: .date
+                    )
+
                 }
             }
         }
         .environment(\.calendar, draft.calendar).environment(\.timeZone, draft.calendar.timeZone)
-        .simultaneousGesture(TapGesture().onEnded { focusedPicker = nil })
         .onChange(of: draft.frequency) { _, frequency in
             focusedPicker = nil
             if frequency != .none && !draft.dateEnabled {
@@ -497,7 +590,14 @@ private struct MaintenanceFormSections: View {
             if frequency == .hourly { draft.setTimeEnabled(true) }
         }
         Section("Notifications") {
-            Toggle("Remind me", isOn: $draft.reminderEnabled)
+            Toggle(
+                "Remind me",
+                isOn: Binding(
+                    get: { draft.reminderEnabled },
+                    set: { enabled in
+                        focusedPicker = nil
+                        draft.reminderEnabled = enabled
+                    }))
             if draft.reminderEnabled && !draft.timeEnabled {
                 Text(
                     "Reminders arrive at 9:00 AM on the due date. Turn on Time to choose a time."
@@ -505,13 +605,17 @@ private struct MaintenanceFormSections: View {
                 .font(.caption).foregroundStyle(.secondary)
             }
         }
-        .simultaneousGesture(TapGesture().onEnded { focusedPicker = nil })
         Section("Service") {
             TextField("Provider", text: $draft.provider).focused($editingText)
             HStack {
                 Text("Cost")
                 Spacer()
-                ProjectCostField(amount: $draft.cost, label: "Maintenance cost").frame(width: 140)
+                ProjectCostField(
+                    amount: $draft.cost, label: "Maintenance cost",
+                    onFocus: {
+                        focusedPicker = nil
+                    }
+                ).frame(width: 140, alignment: .trailing)
             }
             TextField("Notes", text: $draft.notes, axis: .vertical).focused($editingText).lineLimit(
                 2...5)
@@ -524,7 +628,6 @@ private struct MaintenanceFormSections: View {
                 )
             }
         }
-        .simultaneousGesture(TapGesture().onEnded { focusedPicker = nil })
     }
 }
 
@@ -547,7 +650,8 @@ struct MaintenanceEditor: View {
             }
             .navigationTitle("Edit maintenance").navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { FormCancelButton() }
+                    .formIconBackground()
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
                         do {
@@ -555,7 +659,7 @@ struct MaintenanceEditor: View {
                             dismiss()
                         } catch { saveError = true }
                     }.buttonStyle(SaveButtonStyle()).disabled(!draft.canSave)
-                }
+                }.formIconBackground()
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
                     Button("Done") {
@@ -570,7 +674,7 @@ struct MaintenanceEditor: View {
             } message: {
                 Text("Please try saving again.")
             }
-        }
+        }.formDiscardProtection(tracking: draft)
     }
 }
 
@@ -600,14 +704,14 @@ struct MaintenanceCreateFields: View {
     }
 }
 
-struct ProjectTaskDraft: Identifiable {
+struct ProjectTaskDraft: Identifiable, Equatable {
     let id = UUID()
     var title = ""
     var isComplete = false
     var original: ProjectTask?
 }
 
-struct ProjectShoppingDraft: Identifiable {
+struct ProjectShoppingDraft: Identifiable, Equatable {
     let id = UUID()
     var name = ""
     var quantity = 1
@@ -617,7 +721,7 @@ struct ProjectShoppingDraft: Identifiable {
     var estimatedTotal: Double { Double(quantity) * (ProjectDraft.amount(unitCost) ?? 0) }
 }
 
-struct ProjectDraft {
+struct ProjectDraft: Equatable {
     var name = ""
     var detail = ""
     var area = "Home"
@@ -731,10 +835,16 @@ struct ProjectDraft {
 private struct ProjectCostField: View {
     @Binding var amount: String
     let label: String
+    var onFocus: () -> Void = {}
+    var visibleLabel: String? = nil
     @FocusState private var isFocused: Bool
 
     var body: some View {
         HStack(spacing: 2) {
+            if let visibleLabel {
+                Text(visibleLabel).font(.subheadline).foregroundStyle(.secondary).padding(
+                    .trailing, 4)
+            }
             Text("$").foregroundStyle(.secondary).accessibilityHidden(true)
             TextField("0.00", text: $amount)
                 .keyboardType(.decimalPad).multilineTextAlignment(.trailing)
@@ -748,7 +858,9 @@ private struct ProjectCostField: View {
                                     .font: UIFont.preferredFont(forTextStyle: .body)
                                 ]).width) + 2))
         }
-        .frame(maxWidth: .infinity, alignment: .trailing)
+        .onChange(of: isFocused) { _, focused in
+            if focused { onFocus() }
+        }
         .contentShape(Rectangle()).onTapGesture { isFocused = true }
     }
 }
@@ -757,11 +869,16 @@ struct ProjectFormSections: View {
     @Binding var draft: ProjectDraft
     var listsAreReadOnly = false
     var createSaveButton: AnyView? = nil
+    @State private var taskRowFrames: [UUID: CGRect] = [:]
+    @State private var shoppingRowFrames: [UUID: CGRect] = [:]
 
     var body: some View {
         Section("Project details") {
             TextField("Project name", text: $draft.name)
-                .toolbar { ToolbarItem(placement: .topBarTrailing) { createSaveButton } }
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) { createSaveButton }
+                        .formIconBackground()
+                }
             TextField("Area", text: $draft.area)
             TextField("Notes", text: $draft.detail, axis: .vertical).lineLimit(2...4)
             DatePicker("Target date", selection: $draft.targetDate, displayedComponents: .date)
@@ -778,17 +895,22 @@ struct ProjectFormSections: View {
             }
             ForEach($draft.tasks) { $task in
                 HStack(spacing: 12) {
-                    Button {
-                        task.isComplete.toggle()
-                    } label: {
-                        Image(systemName: task.isComplete ? "checkmark.circle.fill" : "circle")
-                            .font(.title2).foregroundStyle(task.isComplete ? forest : .secondary)
-                    }
-                    .buttonStyle(.borderless)
-                    .accessibilityLabel(task.isComplete ? "Mark task incomplete" : "Complete task")
+                    Image(systemName: "line.3.horizontal")
+                        .foregroundStyle(.secondary).padding(.vertical, 10)
+                        .accessibilityLabel("Reorder \(task.title)")
+                        .accessibilityAddTraits(.isButton)
+                        .highPriorityGesture(
+                            DragGesture(minimumDistance: 4, coordinateSpace: .global)
+                                .onChanged { value in
+                                    reorder(
+                                        task.id, at: value.location, frames: taskRowFrames,
+                                        items: $draft.tasks)
+                                }
+                        )
+                        .allowsHitTesting(!listsAreReadOnly)
                     TextField("Task title", text: $task.title, axis: .vertical)
-                        .strikethrough(task.isComplete)
-                        .foregroundStyle(task.isComplete ? .secondary : .primary)
+                        .accessibilityLabel("Task title").accessibilityIdentifier(
+                            "project-task-title")
                     Button(role: .destructive) {
                         draft.tasks.removeAll { $0.id == task.id }
                     } label: {
@@ -796,63 +918,80 @@ struct ProjectFormSections: View {
                     }
                     .buttonStyle(.borderless).accessibilityLabel("Remove task")
                 }.padding(.vertical, 4)
+                    .background(
+                        GeometryReader { geometry in
+                            Color.clear.onAppear {
+                                taskRowFrames[task.id] = geometry.frame(in: .global)
+                            }
+                            .onChange(of: geometry.frame(in: .global)) { _, frame in
+                                taskRowFrames[task.id] = frame
+                            }
+                        })
             }
-            .onMove { draft.tasks.move(fromOffsets: $0, toOffset: $1) }
             Button {
                 draft.tasks.append(ProjectTaskDraft())
             } label: {
                 Label("Add task", systemImage: "plus.circle.fill")
             }
         } header: {
-            Text("Task list · \(draft.tasks.filter(\.isComplete).count)/\(draft.tasks.count)")
+            Text("Task list")
         } footer: {
             Text(
-                "Check off steps to update progress. Set the project status from its details page.")
+                "Drag the handles to reorder tasks. Check tasks off on the project details page.")
         }.disabled(listsAreReadOnly)
         Section {
             if draft.shoppingItems.isEmpty {
                 Text("Add supplies or purchases for this project.").foregroundStyle(.secondary)
             }
             ForEach($draft.shoppingItems) { $item in
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 12) {
-                        Button {
-                            item.isPurchased.toggle()
-                        } label: {
-                            Image(systemName: item.isPurchased ? "checkmark.circle.fill" : "circle")
-                                .font(.title2).foregroundStyle(
-                                    item.isPurchased ? forest : .secondary)
-                        }
-                        .buttonStyle(.borderless)
-                        .accessibilityLabel(
-                            item.isPurchased ? "Mark item unpurchased" : "Mark item purchased")
-                        TextField("Shopping item", text: $item.name)
-                            .strikethrough(item.isPurchased)
-                        Button(role: .destructive) {
-                            draft.shoppingItems.removeAll { $0.id == item.id }
-                        } label: {
-                            Image(systemName: "minus.circle")
-                        }
-                        .buttonStyle(.borderless).accessibilityLabel("Remove shopping item")
-                    }
-                    HStack {
-                        Text("Qty").font(.subheadline)
-                        TextField(
-                            "Quantity", value: $item.quantity, format: .number.grouping(.never)
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: "line.3.horizontal")
+                        .foregroundStyle(.secondary).padding(.vertical, 10)
+                        .accessibilityLabel("Reorder \(item.name)")
+                        .accessibilityAddTraits(.isButton)
+                        .highPriorityGesture(
+                            DragGesture(minimumDistance: 4, coordinateSpace: .global)
+                                .onChanged { value in
+                                    reorder(
+                                        item.id, at: value.location, frames: shoppingRowFrames,
+                                        items: $draft.shoppingItems)
+                                }
                         )
-                        .keyboardType(.numberPad).multilineTextAlignment(.trailing).frame(width: 45)
-                        .accessibilityLabel("Quantity")
-                        Spacer()
-                        Text("Unit cost").font(.subheadline)
-                        Spacer()
-                        ProjectCostField(amount: $item.unitCost, label: "Estimated unit cost")
-                            .frame(width: 110)
+                        .allowsHitTesting(!listsAreReadOnly)
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 12) {
+                            TextField("Shopping item", text: $item.name)
+                            Button(role: .destructive) {
+                                draft.shoppingItems.removeAll { $0.id == item.id }
+                            } label: {
+                                Image(systemName: "minus.circle")
+                            }
+                            .buttonStyle(.borderless).accessibilityLabel("Remove shopping item")
+                        }
+                        HStack {
+                            HStack(spacing: 6) {
+                                Text("Qty").font(.subheadline).foregroundStyle(.secondary)
+                                QuantitySwipeControl(value: $item.quantity)
+                            }
+                            Spacer()
+                            ProjectCostField(
+                                amount: $item.unitCost, label: "Estimated unit cost",
+                                visibleLabel: "Unit cost")
+                        }
+                        LabeledContent("Item estimate", value: item.estimatedTotal.currency)
+                            .font(.caption).foregroundStyle(.secondary)
                     }
-                    LabeledContent("Item estimate", value: item.estimatedTotal.currency)
-                        .font(.caption).foregroundStyle(.secondary)
                 }.padding(.vertical, 6)
+                    .background(
+                        GeometryReader { geometry in
+                            Color.clear.onAppear {
+                                shoppingRowFrames[item.id] = geometry.frame(in: .global)
+                            }
+                            .onChange(of: geometry.frame(in: .global)) { _, frame in
+                                shoppingRowFrames[item.id] = frame
+                            }
+                        })
             }
-            .onMove { draft.shoppingItems.move(fromOffsets: $0, toOffset: $1) }
             Button {
                 draft.shoppingItems.append(ProjectShoppingDraft())
             } label: {
@@ -864,7 +1003,7 @@ struct ProjectFormSections: View {
             Text("Shopping list (optional)")
         } footer: {
             Text(
-                "Estimates use quantity × unit cost, including purchased items. Shopping checkmarks do not change task progress."
+                "Drag handles to reorder. Swipe quantities up or down. Estimates use quantity × unit cost."
             )
         }.disabled(listsAreReadOnly)
         Section {
@@ -872,13 +1011,13 @@ struct ProjectFormSections: View {
                 Text("Project estimate")
                 Spacer()
                 ProjectCostField(amount: $draft.estimatedCost, label: "Project estimate")
-                    .frame(width: 140)
+                    .frame(width: 140, alignment: .trailing)
             }
             HStack {
                 Text("Actual cost")
                 Spacer()
                 ProjectCostField(amount: $draft.actualCost, label: "Actual cost")
-                    .frame(width: 140)
+                    .frame(width: 140, alignment: .trailing)
             }
             if !draft.shoppingItems.isEmpty {
                 Button("Use shopping total as project estimate") {
@@ -896,6 +1035,23 @@ struct ProjectFormSections: View {
             )
         }
     }
+    private func reorder<Item: Identifiable>(
+        _ id: UUID, at point: CGPoint,
+        frames: [UUID: CGRect], items: Binding<[Item]>
+    ) where Item.ID == UUID {
+        guard !listsAreReadOnly,
+            let target = frames.first(where: { $0.value.contains(point) })?.key,
+            target != id,
+            let source = items.wrappedValue.firstIndex(where: { $0.id == id }),
+            let destination = items.wrappedValue.firstIndex(where: { $0.id == target })
+        else { return }
+        var reordered = items.wrappedValue
+        reordered.move(
+            fromOffsets: IndexSet(integer: source),
+            toOffset: destination > source ? destination + 1 : destination)
+        withAnimation(.easeInOut(duration: 0.15)) { items.wrappedValue = reordered }
+    }
+
 }
 
 struct ProjectEditor: View {
@@ -918,7 +1074,8 @@ struct ProjectEditor: View {
             .navigationTitle(project == nil ? "New project" : "Edit project")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { FormCancelButton() }
+                    .formIconBackground()
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
                         do {
@@ -926,7 +1083,7 @@ struct ProjectEditor: View {
                             dismiss()
                         } catch { saveError = true }
                     }.buttonStyle(SaveButtonStyle()).disabled(!draft.canSave)
-                }
+                }.formIconBackground()
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
                     Button("Done") {
@@ -941,7 +1098,7 @@ struct ProjectEditor: View {
             } message: {
                 Text("Please try saving again.")
             }
-        }
+        }.formDiscardProtection(tracking: draft)
     }
 }
 

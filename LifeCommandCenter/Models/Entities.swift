@@ -5,6 +5,7 @@ import UIKit
 import UserNotifications
 
 @Model final class TaskItem {
+    var completedScheduleDates: [Date] = []
     var title: String
     var detail: String
     var dueDate: Date
@@ -179,8 +180,11 @@ import UserNotifications
     }
     var progress: Double {
         if status == "Completed" { return 1 }
-        return tasks.isEmpty
-            ? 0 : Double(tasks.filter(\.isComplete).count) / Double(tasks.count)
+        return totalItemCount == 0 ? 0 : Double(completedItemCount) / Double(totalItemCount)
+    }
+    var totalItemCount: Int { tasks.count + shoppingItems.count }
+    var completedItemCount: Int {
+        tasks.filter(\.isComplete).count + shoppingItems.filter(\.isPurchased).count
     }
     var isComplete: Bool { status == "Completed" }
     var displayStatus: String { status }

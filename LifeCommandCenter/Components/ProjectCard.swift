@@ -65,7 +65,7 @@ struct ProjectDetailView: View {
                 ProgressView(value: project.progress).tint(forest)
                 HStack {
                     Text(
-                        "\(project.tasks.filter(\.isComplete).count) / \(project.tasks.count) tasks complete"
+                        "\(project.completedItemCount) / \(project.totalItemCount) items complete"
                     )
                     Spacer()
                     Text("\(Int((project.progress * 100).rounded()))%")

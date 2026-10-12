@@ -221,7 +221,7 @@ struct SubscriptionCreateFields: View {
                         )
                         done()
                     }.buttonStyle(SaveButtonStyle()).disabled(name.isEmpty)
-                }
+                }.formIconBackground()
             }
             TextField("Category", text: $category)
             TextField("Cost", text: $cost).keyboardType(.decimalPad)
@@ -268,7 +268,7 @@ struct BillCreateFields: View {
                         }
                         done()
                     }.buttonStyle(SaveButtonStyle()).disabled(name.isEmpty)
-                }
+                }.formIconBackground()
             }
             TextField("Amount", text: $amount).keyboardType(.decimalPad)
             DatePicker("Due date", selection: $due, displayedComponents: .date)
