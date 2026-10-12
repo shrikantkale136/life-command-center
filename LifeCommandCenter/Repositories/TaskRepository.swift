@@ -1,13 +1,18 @@
-import SwiftData
 import Foundation
+import SwiftData
 
 @MainActor
 struct TaskRepository {
     let context: ModelContext
-    var scheduleNotification: (String, String, Date) -> Void = { id, title, date in
+    var scheduleNotification: (String, String, Date) -> Void = {
+        id,
+        title,
+        date in
         NotificationService.schedule(id: id, title: title, date: date)
     }
-    var cancelNotification: (String) -> Void = { id in NotificationService.cancel(id: id) }
+    var cancelNotification: (String) -> Void = { id in
+        NotificationService.cancel(id: id)
+    }
 
     func toggleCompletion(for task: TaskItem) {
         task.isComplete.toggle()
@@ -28,7 +33,11 @@ struct TaskRepository {
                 )
                 context.insert(nextOccurrence)
                 if nextOccurrence.reminderEnabled {
-                    scheduleNotification(nextOccurrence.persistentModelID.hashValue.description, nextOccurrence.title, nextOccurrence.dueDate)
+                    scheduleNotification(
+                        nextOccurrence.persistentModelID.hashValue.description,
+                        nextOccurrence.title,
+                        nextOccurrence.dueDate
+                    )
                 }
             }
         } else if task.reminderEnabled {

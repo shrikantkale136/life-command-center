@@ -7,7 +7,7 @@ import UIKit
 @main
 struct LifeCommandCenterApp: App {
     let container: ModelContainer = {
-        let schema = Schema([TaskItem.self, HomeMaintenance.self, HomeProject.self, ProjectTask.self, SubscriptionItem.self, BillItem.self, GroceryItem.self])
+        let schema = Schema([TaskItem.self, HomeMaintenance.self, HomeProject.self, ProjectTask.self, ProjectShoppingItem.self, SubscriptionItem.self, BillItem.self, GroceryItem.self])
         let isUITesting = ProcessInfo.processInfo.arguments.contains("-ui-testing")
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: isUITesting)
         return try! ModelContainer(for: schema, configurations: [config])
