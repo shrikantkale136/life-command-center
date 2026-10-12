@@ -1,8 +1,8 @@
-import SwiftUI
-import SwiftData
-import UserNotifications
 import Charts
+import SwiftData
+import SwiftUI
 import UIKit
+import UserNotifications
 
 private struct TaskDraft {
     var title: String
@@ -42,12 +42,19 @@ struct TaskEditor: View {
                 Section("Task") {
                     TextField("Title", text: $draft.title)
                     TextField("Notes", text: $draft.detail, axis: .vertical)
-                    DatePicker("Due", selection: $draft.dueDate, displayedComponents: [.date, .hourAndMinute])
+                    DatePicker(
+                        "Due", selection: $draft.dueDate,
+                        displayedComponents: [.date, .hourAndMinute])
                     Picker("Priority", selection: $draft.priorityRaw) {
                         ForEach(TaskPriority.allCases) { Text($0.rawValue).tag($0.rawValue) }
                     }
                     Picker("Category", selection: $draft.category) {
-                        ForEach(["Personal", "Work", "Home", "Finance", "Shopping", "Health", "Family", "Other"], id: \.self) { Text($0) }
+                        ForEach(
+                            [
+                                "Personal", "Work", "Home", "Finance", "Shopping", "Health",
+                                "Family", "Other",
+                            ], id: \.self
+                        ) { Text($0) }
                     }
                     Picker("Repeat", selection: $draft.repeatRaw) {
                         ForEach(RepeatRule.allCases) { Text($0.rawValue).tag($0.rawValue) }
@@ -62,19 +69,23 @@ struct TaskEditor: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save)
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Save", action: save).buttonStyle(SaveButtonStyle())
                         .fontWeight(.semibold)
-                        .disabled(draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .disabled(
+                            draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
-            .confirmationDialog("Delete this task?", isPresented: $showingDeleteConfirmation, titleVisibility: .visible) {
+            .confirmationDialog(
+                "Delete this task?", isPresented: $showingDeleteConfirmation,
+                titleVisibility: .visible
+            ) {
                 Button("Delete Task", role: .destructive) {
                     NotificationService.cancel(id: task.persistentModelID.hashValue.description)
                     context.delete(task)
                     dismiss()
                 }
-                Button("Cancel", role: .cancel) { }
+                Button("Cancel", role: .cancel) {}
             }
         }
     }

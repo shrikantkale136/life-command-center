@@ -283,7 +283,7 @@
 		B1B1B1B1B1B1B1B1B1B1B104 /* LifeCommandCenterUITests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B1B1B1B1B1B1B1B1B1B1B105 /* Build configuration list for UI tests */;
-			buildPhases = ( B1B1B1B1B1B1B1B1B1B111 /* Sources */, B1B1B1B1B1B1B1B1B1B1B107 /* Frameworks */, B1B1B1B1B1B1B1B1B1B1B108 /* Resources */, );
+			buildPhases = ( B1B1B1B1B1B1B1B1B1B1B111 /* Sources */, B1B1B1B1B1B1B1B1B1B1B107 /* Frameworks */, B1B1B1B1B1B1B1B1B1B1B108 /* Resources */, );
 			buildRules = ( );
 			dependencies = ( B1B1B1B1B1B1B1B1B1B1B109 /* App dependency */ );
 			name = LifeCommandCenterUITests;
