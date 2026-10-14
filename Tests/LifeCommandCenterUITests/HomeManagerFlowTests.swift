@@ -14,6 +14,119 @@ final class HomeManagerFlowTests: XCTestCase {
         app.terminate()
     }
 
+    func testVisitingCardQuickAddLibraryEditingAndContactsExport() {
+        XCTAssertTrue(app.buttons["Quick add"].waitForExistence(timeout: 10))
+        app.buttons["Quick add"].tap()
+        app.buttons["quick-add-type"].tap()
+        app.buttons["Visiting Card"].tap()
+        XCTAssertTrue(app.navigationBars["New visiting card"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Save"].isEnabled)
+        XCTAssertTrue(app.buttons["Scan Card"].exists)
+        XCTAssertTrue(app.buttons["Import Photo"].exists)
+        app.buttons["Enter Manually"].tap()
+        app.textFields["card-name"].tap()
+        app.textFields["card-name"].typeText("Alex Card")
+        app.buttons["Done"].tap()
+        app.textFields["Company"].tap()
+        app.textFields["Company"].typeText("Example Studio")
+        app.buttons["Done"].tap()
+        app.buttons["Add email"].tap()
+        app.textFields["Email address"].tap()
+        app.textFields["Email address"].typeText("alex@example.com")
+        app.buttons["Done"].tap()
+        app.buttons["Cancel"].tap()
+        XCTAssertTrue(app.alerts["Discard your changes?"].waitForExistence(timeout: 5))
+        app.buttons["Keep Editing"].tap()
+        app.buttons["Save"].tap()
+        XCTAssertTrue(app.buttons["Quick add"].waitForExistence(timeout: 5))
+        app.tabBars.buttons["Settings"].tap()
+        reveal(app.buttons["visiting-cards-library"])
+        app.buttons["visiting-cards-library"].tap()
+        XCTAssertTrue(app.navigationBars["Visiting Cards"].waitForExistence(timeout: 5))
+        let row = app.buttons["visiting-card-Alex Card"]
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        row.tap()
+        XCTAssertTrue(app.staticTexts["Example Studio"].exists)
+        app.buttons["Edit card"].tap()
+        XCTAssertTrue(app.navigationBars["Edit card"].waitForExistence(timeout: 5))
+        app.textFields["Company"].tap()
+        app.textFields["Company"].typeText(" Updated")
+        app.buttons["Done"].tap()
+        app.buttons["Save"].tap()
+        XCTAssertTrue(app.staticTexts["Example Studio Updated"].waitForExistence(timeout: 5))
+        reveal(app.buttons["Add to Contacts"])
+        app.buttons["Add to Contacts"].tap()
+        XCTAssertTrue(app.navigationBars["New Contact"].waitForExistence(timeout: 5))
+        app.buttons["Cancel"].tap()
+        if app.buttons["Discard Changes"].waitForExistence(timeout: 2) { app.buttons["Discard Changes"].tap() }
+        XCTAssertTrue(app.buttons["Edit card"].waitForExistence(timeout: 5))
+    }
+
+    func testVisitingCardScanFallbackAndDiscardBehavior() {
+        app.tabBars.buttons["Settings"].tap()
+        reveal(app.buttons["visiting-cards-library"])
+        app.buttons["visiting-cards-library"].tap()
+        app.buttons["Add visiting card"].tap()
+        app.buttons["Scan Card"].tap()
+        XCTAssertTrue(app.alerts["Visiting card"].waitForExistence(timeout: 5))
+        app.alerts.buttons["OK"].tap()
+        XCTAssertTrue(app.buttons["Import Photo"].exists)
+        app.buttons["Cancel"].tap()
+        XCTAssertTrue(app.buttons["Add visiting card"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.alerts["Discard your changes?"].exists)
+        app.buttons["Add visiting card"].tap()
+        app.buttons["Enter Manually"].tap()
+        app.textFields["card-name"].tap(); app.textFields["card-name"].typeText("Unsaved card")
+        app.buttons["Done"].tap()
+        let bar = app.navigationBars["New visiting card"]
+        bar.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 0.05,
+            thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8)))
+        XCTAssertTrue(app.alerts["Discard your changes?"].waitForExistence(timeout: 5))
+        app.buttons["Keep Editing"].tap()
+        XCTAssertEqual(app.textFields["card-name"].value as? String, "Unsaved card")
+        app.buttons["Cancel"].tap()
+        app.buttons["Discard Changes"].tap()
+        XCTAssertTrue(app.buttons["Add visiting card"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["visiting-card-Unsaved card"].exists)
+    }
+
+    func testVisitingCardDuplicatesSearchAndDeleteConfirmation() {
+        app.tabBars.buttons["Settings"].tap()
+        reveal(app.buttons["visiting-cards-library"])
+        app.buttons["visiting-cards-library"].tap()
+        for name in ["First Card", "Second Card"] {
+            app.buttons["Add visiting card"].tap()
+            app.buttons["Enter Manually"].tap()
+            app.textFields["card-name"].tap(); app.textFields["card-name"].typeText(name)
+            app.buttons["Done"].tap()
+            app.buttons["Add email"].tap()
+            app.textFields["Email address"].tap(); app.textFields["Email address"].typeText("shared@example.com")
+            app.buttons["Done"].tap()
+            app.buttons["Save"].tap()
+            if name == "Second Card" {
+                XCTAssertTrue(app.alerts["Possible duplicate"].waitForExistence(timeout: 5))
+                app.buttons["Save Anyway"].tap()
+            }
+            XCTAssertTrue(app.navigationBars["Visiting Cards"].waitForExistence(timeout: 5))
+        }
+        let search = app.searchFields.firstMatch
+        search.tap(); search.typeText("shared@example.com")
+        XCTAssertTrue(app.buttons["visiting-card-First Card"].exists)
+        XCTAssertTrue(app.buttons["visiting-card-Second Card"].exists)
+        app.buttons["Cancel"].tap()
+        let row = app.cells.containing(.button, identifier: "visiting-card-First Card").firstMatch
+        row.swipeLeft()
+        XCTAssertTrue(app.alerts["Delete card?"].waitForExistence(timeout: 3) || app.buttons["Delete"].exists)
+        if !app.alerts["Delete card?"].exists { app.buttons["Delete"].tap() }
+        app.alerts.buttons["Cancel"].tap()
+        XCTAssertTrue(app.buttons["visiting-card-First Card"].exists)
+        row.swipeLeft()
+        if !app.alerts["Delete card?"].exists { app.buttons["Delete"].tap() }
+        app.alerts.buttons["Delete"].tap()
+        XCTAssertFalse(app.buttons["visiting-card-First Card"].exists)
+        XCTAssertTrue(app.buttons["visiting-card-Second Card"].exists)
+    }
+
     func testTodayDashboardAndCalendarNavigation() {
         XCTAssertTrue(app.staticTexts["Today"].waitForExistence(timeout: 8))
         app.buttons["Calendar"].tap()

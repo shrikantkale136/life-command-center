@@ -9,9 +9,13 @@ struct QuickAddView: View {
     @Binding var type: String
     private let types = [
         "Task", "Reminder", "Chore", "Grocery item", "Maintenance", "Project",
-        "Subscription", "Bill",
+        "Subscription", "Bill", "Visiting Card",
     ]
     var body: some View {
+        if type == "Visiting Card" { VisitingCardEditor() }
+        else { standardQuickAdd }
+    }
+    private var standardQuickAdd: some View {
         NavigationStack {
             Form {
                 Section {

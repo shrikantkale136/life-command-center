@@ -234,6 +234,9 @@ struct SettingsView: View {
                     LabeledContent("Home Manager", value: "Version 1.0")
                 }
                 Section("More tools") {
+                    NavigationLink { VisitingCardsView() } label: {
+                        Label("Visiting Cards", systemImage: "person.crop.rectangle.stack")
+                    }.accessibilityIdentifier("visiting-cards-library")
                     NavigationLink {
                         SearchView()
                     } label: {

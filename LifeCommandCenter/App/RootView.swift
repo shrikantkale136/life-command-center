@@ -92,6 +92,7 @@ struct RootView: View {
         }
         .task {
             seedIfNeeded()
+            try? VisitingCardRepository(context: context).removeOrphanedImages()
             if !ProcessInfo.processInfo.arguments.contains("-ui-testing") {
                 NotificationService.syncMaintenance(in: context)
             }

@@ -36,6 +36,9 @@
 		A1A1A1A1A1A1A1A1A1A1A107 /* GroceryCategoryCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A1A1A1A1A1A1A1A1A1A108 /* GroceryCategoryCatalogTests.swift */; };
 		A1A1A1A1A1A1A1A1A1A1A109 /* PersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A1A1A1A1A1A1A1A1A1A10A /* PersistenceTests.swift */; };
 		B1B1B1B1B1B1B1B1B1B1B101 /* HomeManagerFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B1B1B1B1B1B1B1B1B1B102 /* HomeManagerFlowTests.swift */; };
+		CA7D10000000000000000000 /* VisitingCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7D00000000000000000000 /* VisitingCard.swift */; };
+		CA7D10000000000000000001 /* VisitingCardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7D00000000000000000001 /* VisitingCardService.swift */; };
+		CA7D10000000000000000002 /* VisitingCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7D00000000000000000002 /* VisitingCardsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -71,6 +74,9 @@
 		A1A1A1A1A1A1A1A1A1A1A10A /* PersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/LifeCommandCenterTests/PersistenceTests.swift; sourceTree = SOURCE_ROOT; };
 		B1B1B1B1B1B1B1B1B1B1B102 /* HomeManagerFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/LifeCommandCenterUITests/HomeManagerFlowTests.swift; sourceTree = SOURCE_ROOT; };
 		B1B1B1B1B1B1B1B1B1B1B103 /* LifeCommandCenterUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LifeCommandCenterUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CA7D00000000000000000000 /* VisitingCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisitingCard.swift; sourceTree = "<group>"; };
+		CA7D00000000000000000001 /* VisitingCardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisitingCardService.swift; sourceTree = "<group>"; };
+		CA7D00000000000000000002 /* VisitingCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeCommandCenter/Views/VisitingCards/VisitingCardsView.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -136,6 +142,7 @@
 		03FE26E9D2B275B11B82B9A2 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				CA7D00000000000000000000 /* VisitingCard.swift */,
 				9DE35857FE1855A22019769B /* AppTypes.swift */,
 				36E4ACC0EF915D76CA784BC2 /* Entities.swift */,
 			);
@@ -154,6 +161,7 @@
 		E8764D70B53FA9D06CBC14A9 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				CA7D00000000000000000001 /* VisitingCardService.swift */,
 				DEA41489BCC71DA7F7316AAC /* NotificationService.swift */,
 			);
 			path = Services;
@@ -170,6 +178,7 @@
 		E30B4F4A69D252D1867EE142 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				CA7D00000000000000000002 /* VisitingCardsView.swift */,
 				60A5CCFED9C8AC486205EA15 /* Calendar */,
 				F5E86191F486E1CFAEAFA925 /* Dashboard */,
 				48BCFAC1F0C8FA4F8F67D012 /* Groceries */,
@@ -350,6 +359,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 						files = (
+				CA7D10000000000000000002 /* VisitingCardsView.swift in Sources */,
+				CA7D10000000000000000001 /* VisitingCardService.swift in Sources */,
+				CA7D10000000000000000000 /* VisitingCard.swift in Sources */,
 				562485174377431E5EEAA895 /* LifeCommandCenterApp.swift in Sources */,
 				9311BDA99496156ED40972FD /* RootView.swift in Sources */,
 				D63C3F5401E87D1C99FDB615 /* CommonComponents.swift in Sources */,
@@ -415,6 +427,8 @@
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Home Manager";
+                INFOPLIST_KEY_NSCameraUsageDescription = "Scan visiting cards to save their images and contact details.";
+                INFOPLIST_KEY_NSContactsUsageDescription = "Add a reviewed visiting card to your iPhone contacts when you choose Add to Contacts.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0.0;
@@ -439,6 +453,8 @@
 				DEVELOPMENT_TEAM = J38MMLZTR4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Home Manager";
+                INFOPLIST_KEY_NSCameraUsageDescription = "Scan visiting cards to save their images and contact details.";
+                INFOPLIST_KEY_NSContactsUsageDescription = "Add a reviewed visiting card to your iPhone contacts when you choose Add to Contacts.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0.0;

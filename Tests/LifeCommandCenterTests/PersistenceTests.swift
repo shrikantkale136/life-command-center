@@ -1,5 +1,6 @@
 import XCTest
 import SwiftData
+import UIKit
 @testable import LifeCommandCenter
 
 @MainActor
@@ -186,4 +187,137 @@ final class PersistenceTests: XCTestCase {
         }
     }
 
+}
+
+@MainActor
+final class VisitingCardTests: XCTestCase {
+    private func makeImage() -> Data {
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 1200, height: 700)).image { context in
+            UIColor.white.setFill(); context.fill(CGRect(x: 0, y: 0, width: 1200, height: 700))
+            let text = "Alex Morgan\nSenior Designer\nExample Studio\nalex@example.com\n+1 (415) 555-0123\nwww.example.com"
+            (text as NSString).draw(in: CGRect(x: 60, y: 60, width: 1080, height: 600), withAttributes: [
+                .font: UIFont.systemFont(ofSize: 48), .foregroundColor: UIColor.black,
+            ])
+        }
+        return image.pngData()!
+    }
+    func testExtractionAndDuplicateSuggestions() {
+        let fields = CardFieldExtractor.extract("Alex Morgan\nSenior Designer\nExample Studio\nalex@example.com\n+1 (415) 555-0123\nhttps://example.com")
+        XCTAssertEqual(fields.name, "Alex Morgan")
+        XCTAssertEqual(fields.company, "Example Studio")
+        XCTAssertEqual(fields.jobTitle, "Senior Designer")
+        XCTAssertEqual(fields.emails, ["alex@example.com"])
+        XCTAssertEqual(CardFieldExtractor.normalizedPhone(fields.phones.first ?? ""), "14155550123")
+        XCTAssertEqual(fields.website, "https://example.com")
+        let card = VisitingCard(name: "Alex")
+        card.phones = ["+1 415 555 0123"]; card.emails = ["ALEX@example.com"]
+        var draft = VisitingCardDraft()
+        draft.phones = [CardContactValue("+1 (415) 555-0123")]
+        XCTAssertEqual(draft.duplicates(in: [card], excluding: nil).count, 1)
+        XCTAssertTrue(draft.duplicates(in: [card], excluding: card.id).isEmpty)
+        draft.phones = []; draft.emails = [CardContactValue("alex@example.com")]
+        XCTAssertEqual(draft.duplicates(in: [card], excluding: nil).count, 1)
+        draft.emails = [CardContactValue("different@example.com")]
+        XCTAssertTrue(draft.duplicates(in: [card], excluding: nil).isEmpty)
+    }
+    func testRecognitionPreservesEditsMadeWhileProcessing() {
+        let snapshot = VisitingCardDraft()
+        var draft = snapshot
+        draft.name = "Corrected name"; draft.notes = "Keep these notes"; draft.tags = "Friend"
+        let fields = CardExtractedFields(name: "OCR name", company: "Example Studio", jobTitle: "Designer", phones: ["4155550123"], emails: ["alex@example.com"], website: "https://example.com", address: "123 Main St")
+        draft.apply(fields, preservingEditsSince: snapshot)
+        XCTAssertEqual(draft.name, "Corrected name")
+        XCTAssertEqual(draft.company, "Example Studio")
+        XCTAssertEqual(draft.phoneValues, ["4155550123"])
+        XCTAssertEqual(draft.notes, "Keep these notes")
+        XCTAssertEqual(draft.tags, "Friend")
+    }
+
+    func testOnDeviceRecognitionOfCardImage() async throws {
+        let texts = try await VisitingCardOCR.recognize([makeImage()])
+        XCTAssertEqual(texts.count, 1)
+        XCTAssertTrue(texts[0].contains("Alex Morgan"))
+        XCTAssertTrue(texts[0].contains("alex@example.com"))
+        XCTAssertEqual(CardFieldExtractor.extract(texts[0]).company, "Example Studio")
+    }
+    func testImageAndMetadataPersistenceReplacementAndDeletion() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let images = VisitingCardImageStore(directory: root.appendingPathComponent("images"))
+        let schema = Schema([VisitingCard.self])
+        let configuration = ModelConfiguration(schema: schema, url: root.appendingPathComponent("cards.store"))
+        var originalFiles: [String] = []
+        do {
+            let container = try ModelContainer(for: schema, configurations: [configuration])
+            let repository = VisitingCardRepository(context: container.mainContext, images: images)
+            var draft = VisitingCardDraft()
+            XCTAssertFalse(draft.canSave)
+            draft.frontData = makeImage()
+            XCTAssertTrue(draft.canSave)
+            let card = try repository.save(draft)
+            XCTAssertEqual(card.displayName, "Untitled card")
+            XCTAssertEqual(card.imageFiles.count, 2)
+            originalFiles = card.imageFiles
+            XCTAssertNotNil(images.data(for: card.frontImage))
+            XCTAssertNotNil(images.data(for: card.frontThumbnail))
+        }
+        let reopened = try ModelContainer(for: schema, configurations: [configuration])
+        let card = try XCTUnwrap(reopened.mainContext.fetch(FetchDescriptor<VisitingCard>()).first)
+        XCTAssertNotNil(images.data(for: card.frontImage))
+        let repository = VisitingCardRepository(context: reopened.mainContext, images: images)
+        var draft = VisitingCardDraft(card: card, images: images)
+        draft.name = "Alex"; draft.tags = "Design, design, Friend"; draft.notes = "Met at an event"
+        draft.phones = [CardContactValue("4155550123")]
+        draft.backData = makeImage()
+        _ = try repository.save(draft, card: card)
+        XCTAssertEqual(card.tags, ["Design", "Friend"])
+        XCTAssertEqual(card.phones, ["4155550123"])
+        XCTAssertEqual(card.imageFiles.count, 4)
+        XCTAssertTrue(originalFiles.allSatisfy { images.data(for: $0) == nil })
+        let validFiles = card.imageFiles
+        draft.backData = Data("invalid image".utf8); draft.name = "Unsaved"
+        XCTAssertThrowsError(try repository.save(draft, card: card))
+        XCTAssertEqual(card.name, "Alex")
+        XCTAssertEqual(card.imageFiles, validFiles)
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: images.directory.path).count, 4)
+        try Data("orphan".utf8).write(to: images.directory.appendingPathComponent("orphan.jpg"))
+        try repository.removeOrphanedImages()
+        XCTAssertNil(images.data(for: "orphan.jpg"))
+        XCTAssertTrue(validFiles.allSatisfy { images.data(for: $0) != nil })
+        try repository.delete(card)
+        XCTAssertTrue(try reopened.mainContext.fetch(FetchDescriptor<VisitingCard>()).isEmpty)
+        XCTAssertTrue(validFiles.allSatisfy { images.data(for: $0) == nil })
+    }
+    func testFailedNewSaveCleansUpImagesAndDraftDoesNotMutateModel() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let container = try ModelContainer(for: VisitingCard.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let images = VisitingCardImageStore(directory: root)
+        let repository = VisitingCardRepository(context: container.mainContext, images: images)
+        var draft = VisitingCardDraft(); draft.frontData = makeImage(); draft.backData = Data()
+        XCTAssertThrowsError(try repository.save(draft))
+        XCTAssertTrue(try container.mainContext.fetch(FetchDescriptor<VisitingCard>()).isEmpty)
+        XCTAssertTrue(try FileManager.default.contentsOfDirectory(atPath: root.path).isEmpty)
+        let card = VisitingCard(name: "Original"); container.mainContext.insert(card)
+        var edit = VisitingCardDraft(card: card); edit.name = "Unsaved edit"
+        XCTAssertEqual(card.name, "Original")
+        XCTAssertNil(images.data(for: "../cards.store"))
+    }
+    func testAddingCardSchemaPreservesExistingTasks() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let url = root.appendingPathComponent("existing.store")
+        let oldSchema = Schema([TaskItem.self, HomeMaintenance.self, HomeProject.self, ProjectTask.self, SubscriptionItem.self, BillItem.self, GroceryItem.self])
+        do {
+            let container = try ModelContainer(for: oldSchema, configurations: ModelConfiguration(schema: oldSchema, url: url))
+            container.mainContext.insert(TaskItem(title: "Keep existing task"))
+            try container.mainContext.save()
+        }
+        let newSchema = Schema([TaskItem.self, HomeMaintenance.self, HomeProject.self, ProjectTask.self, SubscriptionItem.self, BillItem.self, GroceryItem.self, VisitingCard.self])
+        let reopened = try ModelContainer(for: newSchema, configurations: ModelConfiguration(schema: newSchema, url: url))
+        XCTAssertEqual(try reopened.mainContext.fetch(FetchDescriptor<TaskItem>()).first?.title, "Keep existing task")
+        XCTAssertTrue(try reopened.mainContext.fetch(FetchDescriptor<VisitingCard>()).isEmpty)
+    }
 }
