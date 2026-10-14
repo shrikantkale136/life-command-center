@@ -276,6 +276,10 @@ struct MaintenanceDraft: Equatable {
         notes = item.notes
         customInterval = item.customInterval
         customUnit = item.customIntervalUnit
+        if existing == nil {
+            item.reminderHour = AppPreferences().maintenanceMinutes / 60
+            item.reminderMinute = AppPreferences().maintenanceMinutes % 60
+        }
         reminderEnabled = item.reminderEnabled
         dateEnabled = existing == nil ? false : item.dateEnabled
         timeEnabled = item.timeEnabled || (item.timeZoneID.isEmpty && item.reminderEnabled)
@@ -337,8 +341,8 @@ struct MaintenanceDraft: Equatable {
         item.customInterval = customInterval
         item.customIntervalUnitRaw = customUnit.rawValue
         item.reminderEnabled = reminderEnabled
-        item.reminderHour = timeEnabled ? hour : 9
-        item.reminderMinute = timeEnabled ? minute : 0
+        item.reminderHour = timeEnabled ? hour : (existing?.reminderHour ?? AppPreferences().maintenanceMinutes / 60)
+        item.reminderMinute = timeEnabled ? minute : (existing?.reminderMinute ?? AppPreferences().maintenanceMinutes % 60)
         try context.save()
         if !ProcessInfo.processInfo.arguments.contains("-ui-testing") {
             NotificationService.syncMaintenance(in: context)
@@ -600,7 +604,7 @@ private struct MaintenanceFormSections: View {
                     }))
             if draft.reminderEnabled && !draft.timeEnabled {
                 Text(
-                    "Reminders arrive at 9:00 AM on the due date. Turn on Time to choose a time."
+                    "Reminders arrive at \(draft.reminderTime.formatted(date: .omitted, time: .shortened)) on the due date. Turn on Time to choose a time."
                 )
                 .font(.caption).foregroundStyle(.secondary)
             }

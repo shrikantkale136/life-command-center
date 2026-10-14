@@ -5,5 +5,5 @@ import Charts
 import UIKit
 
 let ink = Color.primary
-var forest: Color { AppAccentColor.color(named: UserDefaults.standard.string(forKey: "appAccentColor") ?? "Forest") }
+var forest: Color { AppTheme.shared.color }
 let canvas = Color(uiColor: .systemGroupedBackground)

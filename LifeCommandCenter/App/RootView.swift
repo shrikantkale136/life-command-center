@@ -1,4 +1,5 @@
 import Charts
+import Combine
 import Observation
 import SwiftData
 import SwiftUI
@@ -31,14 +32,18 @@ struct RootView: View {
     @Query(sort: \SubscriptionItem.nextDate) private var subscriptions: [SubscriptionItem]
     @Query(sort: \BillItem.dueDate) private var bills: [BillItem]
     @Query(sort: \GroceryItem.name) private var groceries: [GroceryItem]
-    @State private var viewModel = RootViewModel()
+    @State private var viewModel = RootViewModel(startPage: AppPreferences().startPage)
     @State private var activeSheet: RootSheet?
     @State private var tabSwipeState = MainTabSwipeState()
     @State private var quickAddType = "Task"
+    @State private var notificationValues: [String: PreferenceValue] = [:]
     @AppStorage("didSeedInitialData") private var didSeed = false
     @AppStorage("didSeedGroceryCatalog") private var didSeedGroceries = false
     @AppStorage("appearance") private var appearance = "System"
     @AppStorage("appAccentColor") private var appAccentColor = "Forest"
+    @AppStorage("customAccentHex") private var customAccentHex = "#456B59"
+    @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("followSystemTextSize") private var followSystemTextSize = false
     @AppStorage("appFontSize") private var appFontSize = "Medium"
 
     var body: some View {
@@ -78,8 +83,8 @@ struct RootView: View {
                 else { DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { tabSwipeState.isActive = false } }
             }
         ))
-        .tint(AppAccentColor.color(named: appAccentColor))
-        .environment(\.dynamicTypeSize, AppFontSize.dynamicTypeSize(for: appFontSize))
+        .tint(AppTheme.shared.color)
+        .transformEnvironment(\.dynamicTypeSize) { value in if !followSystemTextSize { value = AppFontSize.dynamicTypeSize(for: appFontSize) } }
         .preferredColorScheme(appearance == "Dark" ? .dark : appearance == "Light" ? .light : nil)
         .sheet(item: $activeSheet) { sheet in
             switch sheet {
@@ -89,6 +94,18 @@ struct RootView: View {
             case .newProject: ProjectEditor()
             case .maintenance(let item): MaintenanceEditor(item: item)
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification).receive(on: DispatchQueue.main)) { _ in
+            let current = AppPreferences().notificationValues
+            guard current != notificationValues else { return }
+            notificationValues = current
+            if !ProcessInfo.processInfo.arguments.contains("-ui-testing") { NotificationService.syncMaintenance(in: context) }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in
+            if !ProcessInfo.processInfo.arguments.contains("-ui-testing") { NotificationService.syncMaintenance(in: context) }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active && !ProcessInfo.processInfo.arguments.contains("-ui-testing") { NotificationService.syncMaintenance(in: context) }
         }
         .task {
             seedIfNeeded()

@@ -39,6 +39,15 @@
 		CA7D10000000000000000000 /* VisitingCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7D00000000000000000000 /* VisitingCard.swift */; };
 		CA7D10000000000000000001 /* VisitingCardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7D00000000000000000001 /* VisitingCardService.swift */; };
 		CA7D10000000000000000002 /* VisitingCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7D00000000000000000002 /* VisitingCardsView.swift */; };
+		5E7710000000000000000000 /* AppPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7700000000000000000000 /* AppPreferences.swift */; };
+		5E7710000000000000000001 /* AppLockService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7700000000000000000001 /* AppLockService.swift */; };
+		5E7710000000000000000002 /* BackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7700000000000000000002 /* BackupService.swift */; };
+		5E7710000000000000000003 /* SettingsDetailViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7700000000000000000003 /* SettingsDetailViews.swift */; };
+		5E7710000000000000000004 /* BackupSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7700000000000000000004 /* BackupSettingsView.swift */; };
+		5E771000000000000000000A /* SettingsFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E770000000000000000000A; };
+		5E771000000000000000000B /* SettingsFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E770000000000000000000B; };
+		5E771000000000000000000C /* ColorPaletteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E770000000000000000000C; };
+		5E771000000000000000000D /* ColorPaletteViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E770000000000000000000D; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -77,6 +86,15 @@
 		CA7D00000000000000000000 /* VisitingCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisitingCard.swift; sourceTree = "<group>"; };
 		CA7D00000000000000000001 /* VisitingCardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisitingCardService.swift; sourceTree = "<group>"; };
 		CA7D00000000000000000002 /* VisitingCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeCommandCenter/Views/VisitingCards/VisitingCardsView.swift; sourceTree = SOURCE_ROOT; };
+		5E7700000000000000000000 /* AppPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeCommandCenter/Services/AppPreferences.swift; sourceTree = SOURCE_ROOT; };
+		5E7700000000000000000001 /* AppLockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeCommandCenter/Services/AppLockService.swift; sourceTree = SOURCE_ROOT; };
+		5E7700000000000000000002 /* BackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeCommandCenter/Services/BackupService.swift; sourceTree = SOURCE_ROOT; };
+		5E7700000000000000000003 /* SettingsDetailViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeCommandCenter/Views/Settings/SettingsDetailViews.swift; sourceTree = SOURCE_ROOT; };
+		5E7700000000000000000004 /* BackupSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeCommandCenter/Views/Settings/BackupSettingsView.swift; sourceTree = SOURCE_ROOT; };
+		5E770000000000000000000A /* SettingsFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/LifeCommandCenterTests/SettingsFeatureTests.swift; sourceTree = SOURCE_ROOT; };
+		5E770000000000000000000B /* SettingsFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/LifeCommandCenterUITests/SettingsFlowTests.swift; sourceTree = SOURCE_ROOT; };
+		5E770000000000000000000C /* ColorPaletteStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeCommandCenter/Services/ColorPaletteStore.swift; sourceTree = SOURCE_ROOT; };
+		5E770000000000000000000D /* ColorPaletteViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeCommandCenter/Views/Settings/ColorPaletteViews.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,6 +114,15 @@
 			isa = PBXGroup;
 			children = (
 				D10000000000000000000002 /* LifeCommandCenter */,
+				5E770000000000000000000D /* ColorPaletteViews.swift */,
+				5E770000000000000000000C /* ColorPaletteStore.swift */,
+				5E770000000000000000000B /* SettingsFlowTests.swift */,
+				5E770000000000000000000A /* SettingsFeatureTests.swift */,
+				5E7700000000000000000004 /* BackupSettingsView.swift */,
+				5E7700000000000000000003 /* SettingsDetailViews.swift */,
+				5E7700000000000000000002 /* BackupService.swift */,
+				5E7700000000000000000001 /* AppLockService.swift */,
+				5E7700000000000000000000 /* AppPreferences.swift */,
 				B70FA110D378490DC1164539 /* Tests */,
 				B10000000000000000000003 /* LifeCommandCenter.app */,
 				DEFB91C1E39FC6AF5BD8DEB6 /* LifeCommandCenterTests.xctest */,
@@ -363,6 +390,13 @@
 				CA7D10000000000000000001 /* VisitingCardService.swift in Sources */,
 				CA7D10000000000000000000 /* VisitingCard.swift in Sources */,
 				562485174377431E5EEAA895 /* LifeCommandCenterApp.swift in Sources */,
+				5E771000000000000000000D /* ColorPaletteViews.swift in Sources */,
+				5E771000000000000000000C /* ColorPaletteStore.swift in Sources */,
+				5E7710000000000000000004 /* BackupSettingsView.swift in Sources */,
+				5E7710000000000000000003 /* SettingsDetailViews.swift in Sources */,
+				5E7710000000000000000002 /* BackupService.swift in Sources */,
+				5E7710000000000000000001 /* AppLockService.swift in Sources */,
+				5E7710000000000000000000 /* AppPreferences.swift in Sources */,
 				9311BDA99496156ED40972FD /* RootView.swift in Sources */,
 				D63C3F5401E87D1C99FDB615 /* CommonComponents.swift in Sources */,
 				9D01D9AC8FA71A343EA4D1E2 /* DesignTokens.swift in Sources */,
@@ -386,8 +420,8 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0EE2406AF4B3E99C345DFE42 /* LifeCommandCenterTests Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ( E6EEB9BAD07B23EE865C8FBE /* RepeatRuleTests.swift in Sources */, A1A1A1A1A1A1A1A1A1A1A101 /* ModelLogicTests.swift in Sources */, A1A1A1A1A1A1A1A1A1A1A103 /* RepositoryTests.swift in Sources */, A1A1A1A1A1A1A1A1A1A1A105 /* NotificationServiceTests.swift in Sources */, A1A1A1A1A1A1A1A1A1A1A107 /* GroceryCategoryCatalogTests.swift in Sources */, A1A1A1A1A1A1A1A1A1A1A109 /* PersistenceTests.swift in Sources */, ); runOnlyForDeploymentPostprocessing = 0; };
-		B1B1B1B1B1B1B1B1B1B1B111 /* LifeCommandCenterUITests Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ( B1B1B1B1B1B1B1B1B1B1B101 /* HomeManagerFlowTests.swift in Sources */, ); runOnlyForDeploymentPostprocessing = 0; };
+		0EE2406AF4B3E99C345DFE42 /* LifeCommandCenterTests Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ( 5E771000000000000000000A /* SettingsFeatureTests.swift in Sources */, E6EEB9BAD07B23EE865C8FBE /* RepeatRuleTests.swift in Sources */, A1A1A1A1A1A1A1A1A1A1A101 /* ModelLogicTests.swift in Sources */, A1A1A1A1A1A1A1A1A1A1A103 /* RepositoryTests.swift in Sources */, A1A1A1A1A1A1A1A1A1A1A105 /* NotificationServiceTests.swift in Sources */, A1A1A1A1A1A1A1A1A1A1A107 /* GroceryCategoryCatalogTests.swift in Sources */, A1A1A1A1A1A1A1A1A1A1A109 /* PersistenceTests.swift in Sources */, ); runOnlyForDeploymentPostprocessing = 0; };
+		B1B1B1B1B1B1B1B1B1B1B111 /* LifeCommandCenterUITests Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ( 5E771000000000000000000B /* SettingsFlowTests.swift in Sources */, B1B1B1B1B1B1B1B1B1B1B101 /* HomeManagerFlowTests.swift in Sources */, ); runOnlyForDeploymentPostprocessing = 0; };
 		B1B1B1B1B1B1B1B1B1B1B108 /* UI Test Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = ( ); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
@@ -427,6 +461,8 @@
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Home Manager";
+				INFOPLIST_FILE = LifeCommandCenter/App/Info.plist;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlock Home Manager and protect your personal records.";
                 INFOPLIST_KEY_NSCameraUsageDescription = "Scan visiting cards to save their images and contact details.";
                 INFOPLIST_KEY_NSContactsUsageDescription = "Add a reviewed visiting card to your iPhone contacts when you choose Add to Contacts.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -453,6 +489,8 @@
 				DEVELOPMENT_TEAM = J38MMLZTR4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Home Manager";
+				INFOPLIST_FILE = LifeCommandCenter/App/Info.plist;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlock Home Manager and protect your personal records.";
                 INFOPLIST_KEY_NSCameraUsageDescription = "Scan visiting cards to save their images and contact details.";
                 INFOPLIST_KEY_NSContactsUsageDescription = "Add a reviewed visiting card to your iPhone contacts when you choose Add to Contacts.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

@@ -18,7 +18,7 @@ struct TaskRepository {
         task.isComplete.toggle()
         task.completedAt = task.isComplete ? .now : nil
 
-        let taskID = task.persistentModelID.hashValue.description
+        let taskID = NotificationService.taskID(task)
         if task.isComplete {
             if task.reminderEnabled { cancelNotification(taskID) }
             if let nextDate = task.repeatRule.next(after: task.dueDate) {
@@ -32,9 +32,10 @@ struct TaskRepository {
                     reminderEnabled: task.reminderEnabled
                 )
                 context.insert(nextOccurrence)
+                try? context.save()
                 if nextOccurrence.reminderEnabled {
                     scheduleNotification(
-                        nextOccurrence.persistentModelID.hashValue.description,
+                        NotificationService.taskID(nextOccurrence),
                         nextOccurrence.title,
                         nextOccurrence.dueDate
                     )

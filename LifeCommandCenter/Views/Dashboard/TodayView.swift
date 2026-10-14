@@ -8,6 +8,7 @@ struct TodayView: View {
     @Environment(\.modelContext) private var context
     @State private var selectedDay = 0
     @AppStorage("preferredName") private var preferredName = ""
+    @AppStorage("personalizedGreetings") private var personalizedGreetings = true
     @State private var selectedCategory = "All"
     let tasks: [TaskItem]
     let maintenance: [HomeMaintenance]
@@ -257,10 +258,6 @@ struct TodayView: View {
         }
     }
     private var greeting: String {
-        let hour = Calendar.current.component(.hour, from: .now)
-        let timeGreeting =
-            hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening"
-        let name = preferredName.trimmingCharacters(in: .whitespacesAndNewlines)
-        return name.isEmpty ? "\(timeGreeting) 👋" : "\(timeGreeting), \(name) 👋"
+        "\(AppGreeting.text(name: preferredName, personalized: personalizedGreetings)) 👋"
     }
 }

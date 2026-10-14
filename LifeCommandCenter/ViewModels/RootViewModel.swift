@@ -4,7 +4,9 @@ import SwiftUI
 @Observable
 @MainActor
 final class RootViewModel {
-    var selectedTab = 0
+    var selectedTab: Int
+
+    init(startPage: StartPage = .today) { selectedTab = startPage.tab }
 
     func selectTab(_ index: Int) {
         withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {

@@ -41,7 +41,8 @@ enum AppAccentColor: String, CaseIterable, Identifiable {
         }
     }
     static func color(named name: String) -> Color {
-        allCases.first { $0.rawValue == name }?.color
+        if name == "Custom" { return AppPalette.color(hex: AppTheme.shared.customHex) }
+        return allCases.first { $0.rawValue == name }?.color
             ?? .init(red: 0.27, green: 0.42, blue: 0.35)
     }
 }

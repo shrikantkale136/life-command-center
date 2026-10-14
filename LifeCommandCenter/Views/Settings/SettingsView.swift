@@ -134,144 +134,83 @@ struct StatisticsView: View {
 }
 
 struct SettingsView: View {
-    @AppStorage("defaultPriority") private var defaultPriority = "Medium"
+    @Environment(AppLockController.self) private var appLock
+    @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("preferredName") private var name = ""
     @AppStorage("appearance") private var appearance = "System"
-    @AppStorage("preferredName") private var preferredName = ""
     @AppStorage("appAccentColor") private var accentColor = "Forest"
-    @AppStorage("appFontSize") private var fontSize = "Medium"
+    @AppStorage("personalizedGreetings") private var personalizedGreetings = true
+    @State private var notificationStatus: UNAuthorizationStatus = .notDetermined
+    @State private var confirmsReset = false
+    @State private var iconError: String?
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Your profile") {
-                    TextField(
-                        "What should Home Manager call you?",
-                        text: $preferredName
-                    )
-                    .textContentType(.givenName).autocorrectionDisabled()
-                }
-                Section("Appearance") {
-                    Picker("Appearance", selection: $appearance) {
-                        ForEach(["System", "Light", "Dark"], id: \.self) {
-                            Text($0)
-                        }
-                    }
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("App color").font(.subheadline)
-                        HStack(spacing: 0) {
-                            ForEach(AppAccentColor.allCases) { option in
-                                Button {
-                                    accentColor = option.rawValue
-                                } label: {
-                                    Circle().fill(option.color)
-                                        .frame(width: 30, height: 30)
-                                        .overlay {
-                                            if accentColor == option.rawValue {
-                                                Image(systemName: "checkmark")
-                                                    .font(
-                                                        .caption.weight(.bold)
-                                                    )
-                                                    .foregroundStyle(
-                                                        option == .orange
-                                                            ? Color.black
-                                                            : Color.white
-                                                    )
-                                            }
-                                        }
-                                        .padding(6)
-                                        .overlay(
-                                            Circle().strokeBorder(
-                                                accentColor == option.rawValue
-                                                    ? option.color.opacity(0.45)
-                                                    : .clear,
-                                                lineWidth: 2
-                                            ).padding(1)
-                                        )
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel(
-                                    "\(option.rawValue) app color\(accentColor == option.rawValue ? ", selected" : "")"
-                                )
+            List {
+                Section {
+                    NavigationLink { ProfileSettingsView() } label: {
+                        HStack(spacing: 12) {
+                            Text(initials).font(.title2.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.5)
+                                .frame(width: 40, height: 40)
+                                .foregroundStyle(forest).background(forest.opacity(0.1), in: Circle()).accessibilityHidden(true)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(displayName).font(.headline)
+                                Text(AppGreeting.text(name: name, personalized: personalizedGreetings)).font(.caption).foregroundStyle(.secondary)
                             }
-                        }
-                        .frame(maxWidth: .infinity)
-                        Text(
-                            "The Home Screen icon follows your selected color."
-                        )
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    }
-                    .padding(.vertical, 4)
-                    Picker("Text size", selection: $fontSize) {
-                        Text("Small").tag("Small")
-                        Text("Medium").tag("Medium")
-                        Text("Large").tag("Large")
-                    }
-                    .pickerStyle(.segmented)
+                        }.padding(.vertical, 2)
+                    }.accessibilityIdentifier("settings-profile")
                 }
-                Section("Defaults") {
-                    Picker("Task priority", selection: $defaultPriority) {
-                        ForEach(TaskPriority.allCases) {
-                            Text($0.rawValue).tag($0.rawValue)
-                        }
-                    }
+                Section("Personalization") {
+                    NavigationLink { AppearanceSettingsView() } label: { SettingsRow("Appearance", icon: "paintpalette", value: appearance) }.accessibilityIdentifier("settings-appearance")
+                    NavigationLink { AccessibilitySettingsView() } label: { SettingsRow("Accessibility", icon: "accessibility") }.accessibilityIdentifier("settings-accessibility")
                 }
-                Section("Notifications") {
-                    Text(
-                        "Reminders are delivered locally on this device and can use your preferred name."
-                    ).font(.footnote).foregroundStyle(.secondary)
-                    Button("Request notification access") {
-                        UNUserNotificationCenter.current().requestAuthorization(
-                            options: [.alert, .sound]) { _, _ in }
-                    }
+                Section("Tasks & reminders") {
+                    NavigationLink { TaskDefaultsSettingsView() } label: { SettingsRow("Task defaults", icon: "checkmark.circle") }.accessibilityIdentifier("settings-task-defaults")
+                    NavigationLink { ReminderSettingsView() } label: { SettingsRow("Reminders", icon: "bell", value: notificationStatus.settingsTitle) }.accessibilityIdentifier("settings-reminders")
                 }
-                Section("Data") {
-                    Text(
-                        "Your information is stored locally. Cloud sync can be added later."
-                    ).font(.footnote).foregroundStyle(.secondary)
+                Section("Privacy & data") {
+                    NavigationLink { AppLockSettingsView() } label: { SettingsRow("App lock", icon: "lock", value: appLock.enabled ? "On" : "Off") }.accessibilityIdentifier("settings-app-lock")
+                    NavigationLink { BackupSettingsView() } label: { SettingsRow("Backup & restore", icon: "externaldrive") }.accessibilityIdentifier("settings-backup")
                 }
-                Section("About") {
-                    LabeledContent("Home Manager", value: "Version 1.0")
+                Section("Tools") {
+                    NavigationLink { VisitingCardsView() } label: { SettingsRow("Visiting Cards", icon: "person.crop.rectangle.stack") }
+                        .accessibilityIdentifier("visiting-cards-library")
+                    NavigationLink { SearchView() } label: { SettingsRow("Search everything", icon: "magnifyingglass") }
+                    NavigationLink { StatisticsView() } label: { SettingsRow("Statistics", icon: "chart.bar") }
                 }
-                Section("More tools") {
-                    NavigationLink { VisitingCardsView() } label: {
-                        Label("Visiting Cards", systemImage: "person.crop.rectangle.stack")
-                    }.accessibilityIdentifier("visiting-cards-library")
-                    NavigationLink {
-                        SearchView()
-                    } label: {
-                        Label(
-                            "Search everything",
-                            systemImage: "magnifyingglass"
-                        )
-                    }
-                    NavigationLink {
-                        StatisticsView()
-                    } label: {
-                        Label("Statistics", systemImage: "chart.bar.fill")
-                    }
+                Section("Help & about") {
+                    NavigationLink { HelpSettingsView() } label: { SettingsRow("Help & feedback", icon: "questionmark.circle") }.accessibilityIdentifier("settings-help")
+                    NavigationLink { AboutSettingsView() } label: { SettingsRow("About Home Manager", icon: "info.circle") }.accessibilityIdentifier("settings-about")
                 }
+                Section {
+                    Button("Reset preferences", role: .destructive) { confirmsReset = true }
+                } footer: { Text("Your records stay on this device. Export a backup to keep a separate copy.") }
             }
+            .listStyle(.insetGrouped)
+            .listSectionSpacing(12)
+            .environment(\.defaultMinListRowHeight, 44)
             .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .confirmationDialog("Reset preferences?", isPresented: $confirmsReset, titleVisibility: .visible) {
+                Button("Reset preferences", role: .destructive) { AppPreferences().reset() }
+            } message: { Text("Appearance, task defaults, reminders, and opening preferences will reset. Your profile name, saved colors, records, images, backup history, and app lock will remain.") }
+            .alert("App icon couldn’t change", isPresented: Binding(get: { iconError != nil }, set: { if !$0 { iconError = nil } })) {
+                Button("OK") { iconError = nil }
+            } message: { Text(iconError ?? "") }
         }
-        .onAppear { updateHomeScreenIcon(for: accentColor) }
-        .onChange(of: accentColor) { oldValue, newValue in
-            updateHomeScreenIcon(for: newValue, revertingTo: oldValue)
-        }
-    }
-
-    private func updateHomeScreenIcon(
-        for color: String,
-        revertingTo previousColor: String? = nil
-    ) {
-        let iconName = color == "Forest" ? nil : "AppIcon\(color)"
-        guard UIApplication.shared.supportsAlternateIcons,
-            UIApplication.shared.alternateIconName != iconName
-        else { return }
-
-        UIApplication.shared.setAlternateIconName(iconName) { error in
-            guard error != nil, let previousColor else { return }
-            DispatchQueue.main.async { accentColor = previousColor }
+        .task { await refreshNotifications(); AppBrand.updateIcon(color: accentColor) }
+        .onChange(of: scenePhase) { _, phase in if phase == .active { Task { await refreshNotifications() } } }
+        .onChange(of: accentColor) { old, new in
+            AppTheme.shared.refresh()
+            AppBrand.updateIcon(color: new) { error in
+                if let error { DispatchQueue.main.async { accentColor = old; AppTheme.shared.refresh(); iconError = error.localizedDescription } }
+            }
         }
     }
+    private var displayName: String { name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Your profile" : name.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var initials: String {
+        let parts = name.split(whereSeparator: \.isWhitespace)
+        return parts.isEmpty ? "HM" : parts.prefix(2).compactMap(\.first).map(String.init).joined().uppercased()
+    }
+    private func refreshNotifications() async { notificationStatus = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus }
 }

@@ -6,7 +6,10 @@ import UIKit
 
 @main
 struct LifeCommandCenterApp: App {
-    @State private var showsOpening = !ProcessInfo.processInfo.arguments.contains("-ui-testing")
+    @State private var showsOpening = !ProcessInfo.processInfo.arguments.contains("-ui-testing") && AppPreferences().openingEnabled
+    @State private var appLock = AppLockController()
+
+    init() { AppPreferences().register() }
 
     let container: ModelContainer = {
         let schema = Schema([TaskItem.self, HomeMaintenance.self, HomeProject.self, ProjectTask.self, ProjectShoppingItem.self, SubscriptionItem.self, BillItem.self, GroceryItem.self, VisitingCard.self])
@@ -18,6 +21,7 @@ struct LifeCommandCenterApp: App {
     var body: some Scene {
         WindowGroup {
             AppOpeningContainer(showsOpening: $showsOpening)
+                .environment(appLock)
                 .modelContainer(container)
         }
     }
@@ -25,7 +29,19 @@ struct LifeCommandCenterApp: App {
 
 private struct AppOpeningContainer: View {
     @Binding var showsOpening: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(AppLockController.self) private var appLock
+    @Environment(\.modelContext) private var context
+    @AppStorage("reduceDecorativeMotion") private var appReduceMotion = false
+    @AppStorage("openingStyle") private var openingStyle = OpeningStyle.sky.rawValue
+    @AppStorage("openingDuration") private var openingDuration = 2.5
+    @AppStorage("followSystemTextSize") private var followSystemTextSize = false
+    @State private var ready = false
+    @State private var hasUnlocked = false
+    @State private var restoreRevision = UUID()
+    @State private var recoveryError: String?
+    private var reduceMotion: Bool { systemReduceMotion || appReduceMotion || openingStyle == OpeningStyle.staticScreen.rawValue }
     @AppStorage("appearance") private var appearance = "System"
     @AppStorage("appFontSize") private var appFontSize = "Medium"
     @State private var contentVisible = false
@@ -33,11 +49,21 @@ private struct AppOpeningContainer: View {
     var body: some View {
         ZStack {
             // Keep startup work running while the opening screen is visible.
-            RootView()
-                .allowsHitTesting(!showsOpening)
-                .accessibilityHidden(showsOpening)
-
-            if showsOpening {
+            if ready && hasUnlocked {
+                RootView().id(restoreRevision)
+                    .allowsHitTesting(!showsOpening && !appLock.isLocked)
+                    .accessibilityHidden(showsOpening || appLock.isLocked)
+            } else {
+                Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
+            }
+            if let recoveryError {
+                VStack(spacing: 18) {
+                    Text("Restore recovery").font(.title2.bold())
+                    Text(recoveryError).multilineTextAlignment(.center)
+                    Button("Retry recovery") { recover() }.buttonStyle(.borderedProminent)
+                }.padding(32)
+            }
+            if showsOpening && ready && hasUnlocked && !appLock.isLocked {
                 BrandedOpeningView(contentVisible: contentVisible || reduceMotion)
                     .transition(reduceMotion ? .identity : .opacity)
                     .zIndex(1)
@@ -46,7 +72,7 @@ private struct AppOpeningContainer: View {
                             contentVisible = true
                         }
                         do {
-                            try await Task.sleep(for: .milliseconds(2250))
+                            try await Task.sleep(for: .seconds(max(0, AppPreferences().openingDuration - (reduceMotion ? 0 : 0.25))))
                         } catch {
                             return
                         }
@@ -57,15 +83,58 @@ private struct AppOpeningContainer: View {
             }
         }
         .preferredColorScheme(appearance == "Dark" ? .dark : appearance == "Light" ? .light : nil)
-        .environment(\.dynamicTypeSize, AppFontSize.dynamicTypeSize(for: appFontSize))
+        .transformEnvironment(\.dynamicTypeSize) { value in
+            if !followSystemTextSize { value = AppFontSize.dynamicTypeSize(for: appFontSize) }
+        }
+        .background(AppPrivacyShield(controller: appLock, colorScheme: appearance == "Dark" ? .dark : appearance == "Light" ? .light : nil,
+                                     visible: appLock.isLocked || appLock.privacyCovered))
+        .task {
+            recover()
+            if appLock.isLocked { await appLock.authenticateToUnlock() }
+            hasUnlocked = !appLock.isLocked
+        }
+        .onChange(of: appLock.isLocked) { _, locked in if !locked { hasUnlocked = true } }
+        .onChange(of: scenePhase) { _, phase in appLock.sceneChanged(phase) }
+        .onReceive(NotificationCenter.default.publisher(for: .backupRecoveryRequired)) { _ in
+            ready = false; recoveryError = BackupError.recovery.localizedDescription
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .backupRestored)) { _ in
+            restoreRevision = UUID()
+            AppBrand.updateIcon(color: UserDefaults.standard.string(forKey: "appAccentColor") ?? "Forest")
+        }
+    }
+    private func recover() {
+        do { try BackupService().recoverIfNeeded(in: context); recoveryError = nil; ready = true }
+        catch { recoveryError = error.localizedDescription; ready = false }
+    }
+}
+
+struct OpeningPreviewView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @AppStorage("reduceDecorativeMotion") private var appReduceMotion = false
+    @AppStorage("openingStyle") private var style = OpeningStyle.sky.rawValue
+    @State private var visible = false
+    var body: some View {
+        BrandedOpeningView(contentVisible: visible)
+            .task {
+                let reduced = systemReduceMotion || appReduceMotion || style == OpeningStyle.staticScreen.rawValue
+                withAnimation(reduced ? nil : .easeIn(duration: 0.25)) { visible = true }
+                do { try await Task.sleep(for: .seconds(AppPreferences().openingDuration)) } catch { return }
+                dismiss()
+            }
     }
 }
 
 private struct BrandedOpeningView: View {
     let contentVisible: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @AppStorage("reduceDecorativeMotion") private var appReduceMotion = false
+    @AppStorage("openingStyle") private var style = OpeningStyle.sky.rawValue
+    private var reduceMotion: Bool { systemReduceMotion || appReduceMotion || style == OpeningStyle.staticScreen.rawValue }
     @Environment(\.colorScheme) private var colorScheme
     @AppStorage("preferredName") private var preferredName = ""
+    @AppStorage("personalizedGreetings") private var personalizedGreetings = true
     @ScaledMetric(relativeTo: .largeTitle) private var iconSize = 112
     @State private var fillsLoader = false
     @State private var revealsSky = false
@@ -127,13 +196,13 @@ private struct BrandedOpeningView: View {
 
     private var greeting: String {
         let name = preferredName.trimmingCharacters(in: .whitespacesAndNewlines)
-        return name.isEmpty ? timeOfDay.greeting : "\(timeOfDay.greeting), \(name)"
+        return !personalizedGreetings || name.isEmpty ? timeOfDay.greeting : "\(timeOfDay.greeting), \(name)"
     }
 
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: timeOfDay.backgroundColors(dark: colorScheme == .dark),
+                colors: style == OpeningStyle.sky.rawValue ? timeOfDay.backgroundColors(dark: colorScheme == .dark) : [Color(uiColor: .systemGroupedBackground)],
                 startPoint: .top, endPoint: .bottom
             )
             .background(Color(uiColor: .systemGroupedBackground))
@@ -147,6 +216,7 @@ private struct BrandedOpeningView: View {
             }
             .clipped()
             .ignoresSafeArea()
+            .opacity(style == OpeningStyle.sky.rawValue ? 1 : 0)
             .accessibilityHidden(true)
 
             VStack(spacing: 24) {
@@ -155,7 +225,7 @@ private struct BrandedOpeningView: View {
                     .scaledToFit()
                     .frame(width: min(iconSize, 160), height: min(iconSize, 160))
                     .clipShape(RoundedRectangle(cornerRadius: min(iconSize, 160) * 0.22))
-                    .background { iconGlow }
+                    .background { if style == OpeningStyle.sky.rawValue { iconGlow } }
                     .accessibilityHidden(true)
 
                 VStack(spacing: 10) {
@@ -193,7 +263,7 @@ private struct BrandedOpeningView: View {
             withAnimation(reduceMotion ? nil : .easeOut(duration: 1.4)) {
                 revealsSky = true
             }
-            withAnimation(reduceMotion ? nil : .linear(duration: 2.25)) {
+            withAnimation(reduceMotion ? nil : .linear(duration: max(0.25, AppPreferences().openingDuration - 0.25))) {
                 fillsLoader = true
             }
         }

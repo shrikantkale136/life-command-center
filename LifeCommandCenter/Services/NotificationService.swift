@@ -26,7 +26,7 @@ enum NotificationService {
             if date > now,
                 let request = makeRequest(
                     id: "maintenance-\(item.reminderID)-\(requests.count)", title: item.name,
-                    date: date, calendar: calendar)
+                    date: date, preferredName: UserDefaults.standard.string(forKey: "preferredName") ?? "", calendar: calendar)
             {
                 requests.append(request)
                 if requests.count == 12 { break }
@@ -39,25 +39,44 @@ enum NotificationService {
 
     @MainActor
     static func syncMaintenance(in context: ModelContext) {
-        guard let items = try? context.fetch(FetchDescriptor<HomeMaintenance>()) else { return }
-        let requests = items.flatMap { makeMaintenanceRequests(for: $0) }
-            .sorted {
-                (($0.trigger as? UNCalendarNotificationTrigger)?.nextTriggerDate() ?? .distantFuture)
-                    < (($1.trigger as? UNCalendarNotificationTrigger)?.nextTriggerDate()
-                        ?? .distantFuture)
-            }
-        let center = UNUserNotificationCenter.current()
-        center.getPendingNotificationRequests { pending in
-            let maintenanceIDs = pending.filter { $0.identifier.hasPrefix("maintenance-") }.map(
-                \.identifier)
-            center.removePendingNotificationRequests(withIdentifiers: maintenanceIDs)
-            guard !requests.isEmpty else { return }
-            let available = max(0, 64 - (pending.count - maintenanceIDs.count))
-            center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
-                guard granted else { return }
-                for request in requests.prefix(available) { center.add(request) }
+        guard !ProcessInfo.processInfo.arguments.contains("-ui-testing"),
+              let items = try? context.fetch(FetchDescriptor<HomeMaintenance>()),
+              let tasks = try? context.fetch(FetchDescriptor<TaskItem>()) else { return }
+        let prefs = AppPreferences()
+        let maintenance = items.flatMap { makeMaintenanceRequests(for: $0) }
+        let taskRequests = tasks.filter { $0.reminderEnabled && !$0.isComplete }.compactMap {
+            makeRequest(id: taskID($0), title: $0.title, date: $0.dueDate,
+                        preferredName: prefs.defaults.string(forKey: "preferredName") ?? "")
+        }
+        let requests = (maintenance + taskRequests).sorted {
+            (($0.trigger as? UNCalendarNotificationTrigger)?.nextTriggerDate() ?? .distantFuture)
+                < (($1.trigger as? UNCalendarNotificationTrigger)?.nextTriggerDate() ?? .distantFuture)
+        }
+        revision += 1
+        let currentRevision = revision
+        let previous = syncTask
+        syncTask = Task { @MainActor in
+            await previous?.value
+            guard revision == currentRevision else { return }
+            let center = UNUserNotificationCenter.current()
+            let settings = await center.notificationSettings()
+            let pending = await center.pendingNotificationRequests()
+            guard revision == currentRevision else { return }
+            // Numeric identifiers were used for task reminders in earlier versions.
+            let owned = pending.filter { $0.identifier.hasPrefix("maintenance-") || $0.identifier.hasPrefix("task-") || Int($0.identifier) != nil }
+            center.removePendingNotificationRequests(withIdentifiers: owned.map(\.identifier))
+            guard [.authorized, .provisional, .ephemeral].contains(settings.authorizationStatus) else { return }
+            for request in requests.prefix(max(0, 64 - (pending.count - owned.count))) {
+                guard revision == currentRevision else { return }
+                try? await center.add(request)
             }
         }
+    }
+    @MainActor private static var revision = 0
+    @MainActor private static var syncTask: Task<Void, Never>?
+    static func taskID(_ task: TaskItem) -> String {
+        let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
+        return "task-" + ((try? encoder.encode(task.persistentModelID))?.base64EncodedString() ?? task.persistentModelID.hashValue.description)
     }
 
     static func makeRequest(
@@ -65,14 +84,15 @@ enum NotificationService {
         title: String,
         date: Date,
         preferredName: String = "",
-        calendar: Calendar = .current
+        calendar: Calendar = .current,
+        preferences: AppPreferences = .init()
     ) -> UNNotificationRequest? {
         guard date > .now else { return nil }
-        let name = preferredName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = preferences.personalizedReminders ? preferredName.trimmingCharacters(in: .whitespacesAndNewlines) : ""
         let content = UNMutableNotificationContent()
         content.title = name.isEmpty ? "Coming up" : "Hey \(name)! 👋"
         content.body = "\(title) is coming up."
-        content.sound = .default
+        content.sound = preferences.soundEnabled(at: date) ? .default : nil
         var dateComponents = calendar.dateComponents(
             [.year, .month, .day, .hour, .minute],
             from: date

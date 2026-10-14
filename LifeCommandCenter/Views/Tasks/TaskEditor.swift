@@ -82,7 +82,7 @@ struct TaskEditor: View {
                 titleVisibility: .visible
             ) {
                 Button("Delete Task", role: .destructive) {
-                    NotificationService.cancel(id: task.persistentModelID.hashValue.description)
+                    NotificationService.cancel(id: NotificationService.taskID(task))
                     context.delete(task)
                     dismiss()
                 }
@@ -99,7 +99,7 @@ struct TaskEditor: View {
         task.category = draft.category
         task.repeatRaw = draft.repeatRaw
         task.reminderEnabled = draft.reminderEnabled
-        let id = task.persistentModelID.hashValue.description
+        let id = NotificationService.taskID(task)
         if draft.reminderEnabled {
             NotificationService.schedule(id: id, title: task.title, date: task.dueDate)
         } else {

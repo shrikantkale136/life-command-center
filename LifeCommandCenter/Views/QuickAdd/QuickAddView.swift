@@ -64,10 +64,11 @@ struct TaskCreateFields: View {
     @Environment(\.modelContext) private var context
     @State private var title = ""
     @State private var date = Date.now
-    @State private var category = "Personal"
-    @State private var priority: TaskPriority = .medium
+    @State private var category = AppPreferences().category
+    @State private var priority: TaskPriority = AppPreferences().priority
     @State private var repeatRule: RepeatRule = .none
-    @State private var reminder = false
+    @State private var reminder = AppPreferences().taskReminders
+    @State private var saveError: String?
     let kind: String
     let done: () -> Void
     var body: some View {
@@ -88,9 +89,11 @@ struct TaskCreateFields: View {
                             reminderEnabled: reminder
                         )
                         context.insert(item)
+                        do { try context.save() }
+                        catch { context.delete(item); saveError = error.localizedDescription; return }
                         if reminder {
                             NotificationService.schedule(
-                                id: item.persistentModelID.hashValue.description,
+                                id: NotificationService.taskID(item),
                                 title: item.title,
                                 date: date
                             )
@@ -113,15 +116,17 @@ struct TaskCreateFields: View {
                     ],
                     id: \.self
                 ) { Text($0) }
-            }
+            }.accessibilityIdentifier("new-task-category")
             Picker("Priority", selection: $priority) {
                 ForEach(TaskPriority.allCases) { Text($0.rawValue).tag($0) }
-            }
+            }.accessibilityIdentifier("new-task-priority")
             Picker("Repeat", selection: $repeatRule) {
                 ForEach(RepeatRule.allCases) { Text($0.rawValue).tag($0) }
             }
             Toggle("Remind me", isOn: $reminder)
-
         }
+        .alert("Task couldn’t save", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
+            Button("OK") { saveError = nil }
+        } message: { Text(saveError ?? "") }
     }
 }
